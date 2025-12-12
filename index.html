@@ -6,6 +6,9 @@
     <title>Macro Game - USP Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Babel for in-browser JSX transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -53,12 +56,15 @@
             100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
     </style>
-<script type="importmap">
+    
+    <!-- Import Map for React -->
+    <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
     "firebase/": "https://esm.sh/firebase@^12.6.0/"
   }
 }
@@ -66,5 +72,837 @@
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col font-sans selection:bg-brand-primary selection:text-white">
     <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef, useCallback } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBnUPL3E8JnbBuqnINL-M6dyZ0MxEddng",
+            authDomain: "econoquest-uff.firebaseapp.com",
+            projectId: "econoquest-uff",
+            storageBucket: "econoquest-uff.firebasestorage.app",
+            messagingSenderId: "837238846376",
+            appId: "1:837238846376:web:b8366d12da6af14eb5a39d",
+            measurementId: "G-10HPXC2MVB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // --- DATA & LOGIC ---
+        const phase1Questions = [
+            {
+                topic: "1. Identidades Contábeis",
+                question: "Em uma economia aberta, se a Poupança Nacional (Privada + Pública) for menor que o Investimento (S < I), o que deve ocorrer com o setor externo?",
+                hint: "Lembre-se da identidade S = I + CC. Se S é pouco para cobrir I, precisamos de poupança de quem?",
+                options: [
+                    { text: "Haverá um Déficit em Transações Correntes (Poupança Externa positiva).", correct: true },
+                    { text: "Haverá um Superávit em Transações Correntes.", correct: false },
+                    { text: "O Governo deve necessariamente aumentar impostos.", correct: false }
+                ],
+                explanation: "Se S < I, o país precisa captar recursos externos para financiar o investimento, o que contabilmente aparece como um Déficit em Transações Correntes (CC < 0) ou Poupança Externa positiva."
+            },
+            {
+                topic: "1. PIB vs PNB",
+                question: "O Brasil historicamente possui um PNB menor que o PIB (PNB < PIB). Qual a razão estrutural para isso?",
+                hint: "PIB mede o produzido NO território. PNB mede a renda dos nacionais. O que sai do país?",
+                options: [
+                    { text: "O país envia mais Renda Líquida ao Exterior (RLEE) do que recebe.", correct: true },
+                    { text: "O país tem uma balança comercial deficitária.", correct: false },
+                    { text: "O país não tem empresas multinacionais.", correct: false }
+                ],
+                explanation: "Como muitas multinacionais operam no Brasil e enviam lucros para fora, a Renda Líquida Enviada ao Exterior é alta, fazendo com que a renda dos nacionais (PNB) seja menor que a produção interna (PIB)."
+            },
+            {
+                topic: "1. Balanço de Pagamentos",
+                question: "O que significa dizer que o Balanço de Pagamentos (BP) é contabilmente igual a zero?",
+                hint: "O BP é um método de partidas dobradas. Todo débito tem um crédito.",
+                options: [
+                    { text: "Que a soma de Transações Correntes, Conta Capital/Financeira e Erros e Omissões deve ser nula.", correct: true },
+                    { text: "Que o país não pode ter dívida externa.", correct: false },
+                    { text: "Que exportações devem ser iguais a importações.", correct: false }
+                ],
+                explanation: "O BP é uma identidade contábil. Um déficit em uma conta (ex: Comercial) deve ser necessariamente financiado por superávit em outra (ex: Financeira) ou variação de reservas."
+            },
+            {
+                topic: "1. Abordagem da Absorção",
+                question: "Se a Absorção Interna (Consumo + Investimento + Gastos) cair enquanto o Produto (Y) permanece constante, o que acontece com a Balança Comercial?",
+                hint: "Y - A = NX. Se A cai e Y é fixo, o saldo NX aumenta ou diminui?",
+                options: [
+                    { text: "A Balança Comercial melhora (tende ao superávit).", correct: true },
+                    { text: "A Balança Comercial piora.", correct: false },
+                    { text: "A taxa de juros aumenta.", correct: false }
+                ],
+                explanation: "Reduzir a absorção interna (menos gastos domésticos) libera produção para o mercado externo ou reduz importações, melhorando o saldo comercial (NX)."
+            },
+            {
+                topic: "2. Agregados Monetários",
+                question: "Qual agregado monetário inclui títulos públicos de alta liquidez e depósitos de poupança, sendo mais amplo que o M1?",
+                hint: "M1 é só dinheiro vivo e conta corrente. M2, M3 e M4 vão adicionando ativos menos líquidos.",
+                options: [
+                    { text: "M2, M3 ou M4 (dependendo da definição exata do país, mas é mais amplo que M1).", correct: true },
+                    { text: "Base Monetária (B).", correct: false },
+                    { text: "Papel-Moeda em Poder do Público (PMPP).", correct: false }
+                ],
+                explanation: "M1 é o mais restrito. M2, M3 e M4 (Meios de Pagamento Ampliados) incluem ativos que rendem juros e têm liquidez quase imediata, como poupança e títulos."
+            },
+            {
+                topic: "2. Criação de Moeda",
+                question: "Como os bancos comerciais criam moeda escritural?",
+                hint: "Eles não imprimem notas. Eles fazem algo com os depósitos que recebem.",
+                options: [
+                    { text: "Emprestando uma parte dos depósitos à vista que recebem (Reserva Fracionária).", correct: true },
+                    { text: "Imprimindo cédulas com autorização do BC.", correct: false },
+                    { text: "Apenas guardando o dinheiro em cofres.", correct: false }
+                ],
+                explanation: "Ao emprestar parte do dinheiro depositado (mantendo apenas o compulsório), o banco coloca dinheiro de volta na economia, multiplicando a oferta monetária."
+            },
+            {
+                topic: "1. PIB Real vs Nominal",
+                question: "Se o PIB Nominal cresceu 10% mas a inflação foi de 10% no mesmo período, o que aconteceu com o PIB Real?",
+                hint: "PIB Real desconta a inflação.",
+                options: [
+                    { text: "O PIB Real permaneceu estagnado (Crescimento zero).", correct: true },
+                    { text: "O PIB Real cresceu 20%.", correct: false },
+                    { text: "O PIB Real cresceu 10%.", correct: false }
+                ],
+                explanation: "O crescimento nominal foi puramente aumento de preços. Em termos de volume de bens produzidos (Real), a economia não cresceu."
+            },
+            {
+                topic: "2. Equação de Fisher",
+                question: "Segundo a Equação de Fisher, se a taxa de juros nominal é 15% e a inflação esperada é 5%, qual é a taxa de juros real aproximada?",
+                hint: "Juro Real = Juro Nominal - Inflação.",
+                options: [
+                    { text: "10%", correct: true },
+                    { text: "20%", correct: false },
+                    { text: "75% (15 x 5)", correct: false }
+                        ],
+                explanation: "A taxa real é o ganho de poder de compra. 15% (Nominal) - 5% (Inflação) = 10% (Real)."
+            },
+            {
+                topic: "2. Taxa de Câmbio",
+                question: "O que é a Taxa de Câmbio Real?",
+                hint: "Não é apenas o preço da moeda, mas o preço relativo dos PRODUTOS entre dois países.",
+                options: [
+                    { text: "A taxa nominal ajustada pela relação de preços (inflação) interna e externa.", correct: true },
+                    { text: "O valor do dólar turismo.", correct: false },
+                    { text: "A taxa de juros internacional.", correct: false }
+                ],
+                explanation: "Câmbio Real mede a competitividade. É a taxa nominal multiplicada pela razão entre preços externos e internos (e = E * P*/P)."
+            },
+            {
+                topic: "2. Funções da Moeda",
+                question: "Quando precificamos uma mercadoria em Reais (R$), qual função da moeda estamos utilizando?",
+                hint: "Estamos usando a moeda para medir valor, como uma régua.",
+                options: [
+                    { text: "Unidade de Conta.", correct: true },
+                    { text: "Reserva de Valor.", correct: false },
+                    { text: "Meio de Troca.", correct: false }
+                ],
+                explanation: "Unidade de Conta é a função de servir como medida comum de valor para bens e serviços."
+            }
+        ];
+
+        function generateMundellFlemingLogic(regime, mobility, policy) {
+            let isFiscal = policy.includes('fiscal');
+            let isExp = policy.includes('exp');
+            
+            let s1 = {
+                question: `Política ${isFiscal?'Fiscal':'Monetária'} ${isExp?'Expansionista':'Contracionista'}. Qual curva se desloca inicialmente?`,
+                hint: "Política Fiscal afeta o mercado de bens (IS). Política Monetária afeta o mercado monetário (LM).",
+                options: [
+                    {text: isFiscal?(isExp?"IS p/ Direita":"IS p/ Esquerda"):(isExp?"LM p/ Direita":"LM p/ Esquerda"), correct:true},
+                    {text: isFiscal?"LM se move":"IS se move", correct:false}
+                ],
+                targetState: { 
+                    isShift: isFiscal?(isExp?1:-1):0, 
+                    lmShift: !isFiscal?(isExp?1:-1):0 
+                }
+            };
+
+            let balance = 'neutral';
+            
+            if(isFiscal) {
+                if(isExp) balance = (mobility === 'perfeita' || mobility === 'imperfeita_alta') ? 'superavit' : 'deficit';
+                else balance = (mobility === 'perfeita' || mobility === 'imperfeita_alta') ? 'deficit' : 'superavit';
+            } else {
+                if(isExp) balance = 'deficit'; // i down (outflow) + Y up (import)
+                else balance = 'superavit';
+            }
+
+            let s2 = {
+                question: "Analisando o novo ponto de equilíbrio interno, qual é a situação do Balanço de Pagamentos?",
+                hint: "Compare o novo ponto com a curva BP. Acima dela = Superávit (Entrada Líquida). Abaixo = Déficit.",
+                options: [
+                    {text: balance === 'superavit' ? "Superávit (Entrada de Dólares)" : "Déficit (Saída de Dólares)", correct: true},
+                    {text: balance === 'superavit' ? "Déficit" : "Superávit", correct: false}
+                ],
+                targetState: s1.targetState 
+            };
+
+            let s3 = { question: '', hint: '', options: [], targetState: {...s1.targetState} };
+            
+            if(regime === 'fixo') {
+                if(balance === 'superavit') {
+                    s3.question = "Superávit pressiona Dólar a cair (Apreciar). Como o BC mantém o Câmbio Fixo?";
+                    s3.hint = "Para evitar a queda do dólar, o BC precisa comprar o excesso de oferta. O que isso faz com a Base Monetária?";
+                    s3.options = [
+                        {text: "Compra Dólares -> Aumenta Reservas -> Expande Moeda (LM Direita)", correct: true},
+                        {text: "Vende Dólares -> Contrai Moeda", correct: false}
+                    ];
+                    s3.targetState.lmShift += 1;
+                } else { 
+                    s3.question = "Déficit pressiona Dólar a subir (Depreciar). Como o BC mantém o Câmbio Fixo?";
+                    s3.hint = "Para evitar a subida do dólar, o BC precisa vender reservas para suprir a falta. O que acontece com os Reais em circulação?";
+                    s3.options = [
+                        {text: "Vende Dólares -> Perde Reservas -> Contrai Moeda (LM Esquerda)", correct: true},
+                        {text: "Compra Dólares -> Expande Moeda", correct: false}
+                    ];
+                    s3.targetState.lmShift -= 1;
+                }
+            } else { 
+                if(balance === 'superavit') {
+                    s3.question = "Superávit faz Dólar cair (Apreciação). Qual o efeito real?";
+                    s3.hint = "Dólar barato torna produtos nacionais caros para estrangeiros. O que acontece com as Exportações Líquidas (NX)?";
+                    s3.options = [
+                        {text: "Exportações Caem (Competitividade cai) -> IS volta p/ Esquerda", correct: true},
+                        {text: "Exportações Sobem -> IS vai p/ Direita", correct: false}
+                    ];
+                    s3.targetState.isShift -= 1;
+                } else { 
+                    s3.question = "Déficit faz Dólar subir (Depreciação). Qual o efeito real?";
+                    s3.hint = "Dólar caro torna produtos nacionais baratos lá fora. Isso estimula as vendas externas (NX)?";
+                    s3.options = [
+                        {text: "Exportações Sobem (Competitividade sobe) -> IS avança p/ Direita", correct: true},
+                        {text: "Exportações Caem -> IS volta", correct: false}
+                    ];
+                    s3.targetState.isShift += 1;
+                    
+                    if(isFiscal && isExp && mobility === 'imperfeita_baixa') {
+                        s3.targetState.isShift += 0.5; 
+                    }
+                }
+            }
+
+            return [s1, s2, s3];
+        }
+
+        function getBpType(mob) {
+            if(mob === 'perfeita') return 'horizontal';
+            if(mob === 'nula') return 'vertical';
+            if(mob === 'imperfeita_alta') return 'flat';
+            return 'steep';
+        }
+
+        // --- APP COMPONENT ---
+        const App = () => {
+            // --- State Management ---
+            const [user, setUser] = useState(null);
+            const [playerData, setPlayerData] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [phase, setPhase] = useState('intro');
+            const [error, setError] = useState(null);
+
+            // Quiz State (Phase 1)
+            const [p1Index, setP1Index] = useState(0);
+            const [p1Score, setP1Score] = useState(0);
+            const [p1Feedback, setP1Feedback] = useState(null);
+            const [p1HintVisible, setP1HintVisible] = useState(false);
+
+            // Simulation State (Phase 2)
+            const [p2Setup, setP2Setup] = useState({ regime: 'fixo', mobility: 'perfeita', policy: 'fiscal_exp' });
+            const [simulationSteps, setSimulationSteps] = useState([]);
+            const [p2Index, setP2Index] = useState(0);
+            const [graphState, setGraphState] = useState({ isShift: 0, lmShift: 0, bpType: 'horizontal', animStage: 0 });
+            const [p2Feedback, setP2Feedback] = useState(null);
+            const [p2HintVisible, setP2HintVisible] = useState(false);
+            
+            // Canvas Ref
+            const canvasRef = useRef(null);
+
+            // --- Authentication & Firestore Logic ---
+            useEffect(() => {
+                const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+                    if (currentUser) {
+                        setUser(currentUser);
+                        try {
+                            const userRef = doc(db, "usuarios", currentUser.uid);
+                            const userSnap = await getDoc(userRef);
+
+                            if (userSnap.exists()) {
+                                setPlayerData(userSnap.data());
+                            } else {
+                                // Create New User Document
+                                const newUserData = {
+                                    nome: currentUser.displayName || "Economista",
+                                    moedas: 0,
+                                    nivel: 1,
+                                    xp: 0
+                                };
+                                await setDoc(userRef, newUserData);
+                                setPlayerData(newUserData);
+                            }
+                        } catch (err) {
+                            console.error("Firestore Error:", err);
+                            setError("Erro ao carregar dados do usuário.");
+                        }
+                    } else {
+                        setUser(null);
+                        setPlayerData(null);
+                    }
+                    setLoading(false);
+                });
+                return () => unsubscribe();
+            }, []);
+
+            const handleLogin = async () => {
+                setError(null);
+                try {
+                    await signInWithPopup(auth, googleProvider);
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            const handleLogout = async () => {
+                await signOut(auth);
+                window.location.reload();
+            };
+
+            const updateCoins = async (amount) => {
+                if (!user || !playerData) return;
+                const newCoins = playerData.moedas + amount;
+                setPlayerData({ ...playerData, moedas: newCoins });
+                try {
+                    const userRef = doc(db, "usuarios", user.uid);
+                    await updateDoc(userRef, { moedas: newCoins });
+                } catch (err) {
+                    console.error("Failed to sync coins", err);
+                }
+            };
+
+            // --- Game Logic: Phase 1 ---
+            const startPhase1 = () => {
+                setPhase('phase1');
+                setP1Index(0);
+                setP1Score(0);
+                setP1Feedback(null);
+                setP1HintVisible(false);
+            };
+
+            const handleP1Answer = (option, question) => {
+                if (p1Feedback) return; // Prevent multiple clicks
+
+                if (option.correct) {
+                    setP1Score(prev => prev + 1);
+                    updateCoins(100);
+                    setP1Feedback({ isCorrect: true, text: question.explanation });
+                } else {
+                    setP1Feedback({ isCorrect: false, text: `A alternativa correta era diferente. Explicação: ${question.explanation}` });
+                }
+            };
+
+            const nextP1Question = () => {
+                if (p1Index < phase1Questions.length - 1) {
+                    setP1Index(prev => prev + 1);
+                    setP1Feedback(null);
+                    setP1HintVisible(false);
+                } else {
+                    setPhase('phase1Result');
+                }
+            };
+
+            // --- Game Logic: Phase 2 ---
+            const startPhase2Setup = () => {
+                setPhase('phase2Setup');
+            };
+
+            const runSimulation = () => {
+                const steps = generateMundellFlemingLogic(p2Setup.regime, p2Setup.mobility, p2Setup.policy);
+                setSimulationSteps(steps);
+                setGraphState({ 
+                    isShift: 0, 
+                    lmShift: 0, 
+                    bpType: getBpType(p2Setup.mobility), 
+                    animStage: 0 
+                });
+                setP2Index(0);
+                setP2Feedback(null);
+                setP2HintVisible(false);
+                setPhase('phase2Game');
+            };
+
+            const handleP2Answer = (option) => {
+                if (p2Feedback) return;
+
+                const currentStep = simulationSteps[p2Index];
+                
+                if (option.correct) {
+                    updateCoins(50);
+                    setP2Feedback({ isCorrect: true, text: "Correto!" });
+                    // Set targets for animation if correct
+                    if (currentStep.targetState) {
+                        setGraphState(prev => ({
+                            ...prev,
+                            targetIS: currentStep.targetState.isShift,
+                            targetLM: currentStep.targetState.lmShift
+                        }));
+                    }
+                } else {
+                    setP2Feedback({ isCorrect: false, text: "Resposta incorreta." });
+                    if (currentStep.targetState) {
+                        setGraphState(prev => ({
+                            ...prev,
+                            targetIS: currentStep.targetState.isShift,
+                            targetLM: currentStep.targetState.lmShift
+                        }));
+                    }
+                }
+            };
+
+            const nextP2Step = () => {
+                // Apply shifts permanently
+                setGraphState(prev => ({
+                    ...prev,
+                    isShift: prev.targetIS !== undefined ? prev.targetIS : prev.isShift,
+                    lmShift: prev.targetLM !== undefined ? prev.targetLM : prev.lmShift,
+                    targetIS: undefined,
+                    targetLM: undefined
+                }));
+
+                if (p2Index < simulationSteps.length - 1) {
+                    setP2Index(prev => prev + 1);
+                    setP2Feedback(null);
+                    setP2HintVisible(false);
+                } else {
+                    setPhase('phase2Result');
+                }
+            };
+
+            const playGraphAnimation = () => {
+                if (!simulationSteps[p2Index].targetState) return;
+
+                setGraphState(prev => ({ ...prev, animStage: 0 }));
+                
+                // Simple animation sequence simulation
+                setTimeout(() => {
+                    setGraphState(prev => ({ 
+                        ...prev, 
+                        isShift: prev.targetIS, 
+                        lmShift: prev.targetLM,
+                        animStage: 1 
+                    }));
+                }, 800);
+
+                setTimeout(() => {
+                    setGraphState(prev => ({ 
+                        ...prev, 
+                        // Revert visual to base state (actual commit happens on Next) or keep visual?
+                        // Keeping visual for feedback
+                        animStage: 0
+                    }));
+                }, 2000);
+            };
+
+            // --- Drawing Canvas ---
+            const drawGraph = useCallback(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                const width = canvas.width;
+                const height = canvas.height;
+                const origin = { x: 50, y: height - 50 };
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Grid
+                ctx.strokeStyle = "#f1f5f9"; ctx.lineWidth = 1;
+                for (let i = 0; i < width; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
+                for (let i = 0; i < height; i += 40) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); }
+
+                // Axes
+                ctx.beginPath();
+                ctx.moveTo(origin.x, 20); ctx.lineTo(origin.x, origin.y); ctx.lineTo(width - 20, origin.y);
+                ctx.lineWidth = 2; ctx.strokeStyle = "#334155"; ctx.stroke();
+                ctx.font = "bold 12px Poppins"; ctx.fillStyle = "#334155";
+                ctx.fillText("i (Juros)", origin.x + 10, 30); ctx.fillText("Y (Renda)", width - 60, origin.y - 10);
+
+                if (graphState.animStage === 1) {
+                    ctx.fillStyle = "#f59e0b"; ctx.fillText("⚠️ Desequilíbrio!", 60, 60);
+                }
+
+                const shift = 40;
+
+                // BP Curve
+                ctx.strokeStyle = "#16a34a"; ctx.lineWidth = 3; ctx.beginPath();
+                let bpY = origin.y - 150;
+                if (graphState.bpType === 'horizontal') { ctx.moveTo(origin.x, bpY); ctx.lineTo(width, bpY); }
+                else if (graphState.bpType === 'vertical') { ctx.moveTo(width / 2, 20); ctx.lineTo(width / 2, origin.y); }
+                else if (graphState.bpType === 'flat') { ctx.moveTo(origin.x, bpY + 50); ctx.lineTo(width, bpY - 50); }
+                else { ctx.moveTo(width / 2 - 60, origin.y); ctx.lineTo(width / 2 + 60, 20); }
+                ctx.stroke();
+
+                // IS Curve
+                let isOff = graphState.isShift * shift;
+                ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 3; ctx.beginPath();
+                ctx.moveTo(origin.x + 50 + isOff, origin.y - 250); ctx.lineTo(origin.x + 350 + isOff, origin.y - 50);
+                ctx.stroke();
+                if (graphState.isShift !== 0) {
+                    ctx.strokeStyle = "rgba(37, 99, 235, 0.2)"; ctx.setLineDash([5, 5]); ctx.beginPath();
+                    ctx.moveTo(origin.x + 50, origin.y - 250); ctx.lineTo(origin.x + 350, origin.y - 50); ctx.stroke(); ctx.setLineDash([]);
+                }
+
+                // LM Curve
+                let lmOff = graphState.lmShift * shift;
+                ctx.strokeStyle = "#dc2626"; ctx.lineWidth = 3; ctx.beginPath();
+                ctx.moveTo(origin.x + 50 + lmOff, origin.y - 50); ctx.lineTo(origin.x + 350 + lmOff, origin.y - 250);
+                ctx.stroke();
+                if (graphState.lmShift !== 0) {
+                    ctx.strokeStyle = "rgba(220, 38, 38, 0.2)"; ctx.setLineDash([5, 5]); ctx.beginPath();
+                    ctx.moveTo(origin.x + 50, origin.y - 50); ctx.lineTo(origin.x + 350, origin.y - 250); ctx.stroke(); ctx.setLineDash([]);
+                }
+
+            }, [graphState]);
+
+            useEffect(() => {
+                if (phase === 'phase2Game') {
+                    drawGraph();
+                }
+            }, [drawGraph, phase]);
+
+            // --- Loading Screen ---
+            if (loading) return <div className="h-screen flex items-center justify-center text-brand-primary font-bold animate-pulse">Carregando MacroGame...</div>;
+
+            // --- Login Screen ---
+            if (!user) {
+                return (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-[#1e1b4b] to-[#0f172a] p-4">
+                        <div className="glass-panel p-8 md:p-12 rounded-3xl max-w-md w-full text-center animate-slide-up relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-primary to-brand-accent"></div>
+                            <div className="inline-block p-4 bg-indigo-50 rounded-full mb-6 shadow-inner border border-indigo-100">
+                                <span className="text-5xl">🏛️</span>
+                            </div>
+                            <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">MACRO<span className="text-brand-primary">GAME</span></h1>
+                            <p className="text-slate-500 mb-8 font-medium text-sm uppercase tracking-widest">USP Edition</p>
+                            <p className="text-slate-600 mb-8 leading-relaxed">
+                                Faça login para acessar o simulador econômico e salvar seu progresso na jornada rumo ao Banco Central.
+                            </p>
+                            {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 border border-red-200">{error}</div>}
+                            <button onClick={handleLogin} className="w-full bg-white text-slate-700 font-bold py-4 px-6 rounded-xl shadow-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-3 group transform hover:-translate-y-1">
+                                <svg className="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05" />
+                                    <path d="M12 4.36c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.09 14.97 0 12 0 7.7 0 3.99 2.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                                </svg>
+                                <span className="group-hover:text-brand-primary transition-colors">Entrar com Google</span>
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- Main App ---
+            return (
+                <div className="flex flex-col min-h-screen w-full">
+                    {/* Navbar / Dashboard */}
+                    <nav className="w-full p-4 flex justify-center z-50 fixed top-0">
+                        <div className="bg-white/95 backdrop-blur-md rounded-full px-4 md:px-6 py-2 md:py-3 shadow-2xl flex justify-between items-center w-full max-w-6xl border border-white/20 transition-all">
+                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.reload()}>
+                                <div className="bg-brand-primary p-2 rounded-lg text-white font-bold text-xl shadow-lg hidden md:block">M</div>
+                                <div>
+                                    <h1 className="text-lg font-extrabold tracking-tight text-brand-primary leading-none">MACRO<span className="text-slate-800">GAME</span></h1>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">USP Edition</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                                {/* Coin Counter */}
+                                <div className="flex items-center gap-2 bg-slate-800 text-white px-5 py-2 rounded-full shadow-lg">
+                                    <span className="text-xl">💰</span>
+                                    <span className="text-lg font-black text-brand-accent">{playerData?.moedas || 0}</span>
+                                </div>
+
+                                {/* User Profile */}
+                                <div className="flex items-center gap-3 border-l border-slate-200 pl-3 md:pl-6">
+                                    <div className="text-right hidden md:block">
+                                        <div className="text-xs font-bold text-slate-700 leading-none mb-1">{playerData?.nome || user.displayName}</div>
+                                        <div className="text-[10px] text-brand-primary font-bold uppercase tracking-wider">Economista Lv. {playerData?.nivel || 1}</div>
+                                    </div>
+                                    <img 
+                                        src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`} 
+                                        alt="User" 
+                                        className="w-10 h-10 rounded-full border-2 border-brand-primary shadow-sm bg-slate-200 object-cover" 
+                                    />
+                                    <button onClick={handleLogout} className="text-slate-400 hover:text-red-500 transition-colors ml-2" title="Sair">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+
+                    <main className="flex-grow flex flex-col items-center justify-center p-4 pt-28 w-full max-w-6xl mx-auto relative z-10">
+                        
+                        {/* Intro Screen */}
+                        {phase === 'intro' && (
+                            <div className="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-12 text-center animate-slide-up relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-primary to-brand-accent"></div>
+                                <div className="inline-block p-6 bg-indigo-50 rounded-full mb-8 animate-float shadow-inner border border-indigo-100">
+                                    <span className="text-6xl">🎓</span>
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">Jornada Macroeconômica</h2>
+                                <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
+                                    Bem-vindo de volta, <strong>{playerData?.nome}</strong>. Continue sua preparação para assumir o Banco Central.
+                                </p>
+                                <div className="grid md:grid-cols-2 gap-6 mb-10 text-left">
+                                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition cursor-default">
+                                        <div className="text-brand-primary font-black text-4xl mb-2 opacity-20">01</div>
+                                        <h3 className="font-bold text-lg mb-1 text-brand-primary">Fundamentos</h3>
+                                        <p className="text-sm text-slate-500">Contabilidade Nacional, Identidades e Sistema Monetário.</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 opacity-70">
+                                        <div className="text-slate-400 font-black text-4xl mb-2 opacity-20">02</div>
+                                        <h3 className="font-bold text-lg mb-1 text-slate-600">Simulador IS-LM-BP</h3>
+                                        <p className="text-sm text-slate-400">Modelo Mundell-Fleming e políticas econômicas.</p>
+                                    </div>
+                                </div>
+                                <button onClick={startPhase1} className="bg-brand-primary hover:bg-indigo-700 text-white text-xl font-bold py-4 px-12 rounded-xl shadow-xl shadow-indigo-500/30 transition-all transform hover:scale-105 active:scale-95">
+                                    INICIAR JORNADA
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Phase 1: Quiz */}
+                        {phase === 'phase1' && (
+                            <div className="glass-panel w-full max-w-3xl rounded-3xl p-8 animate-slide-up flex flex-col min-h-[500px]">
+                                <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                    <div>
+                                        <h3 className="text-2xl font-black text-slate-800">Sabatina Técnica</h3>
+                                        <p className="text-sm text-slate-500 font-medium">Parte I: Agregados Macroeconômicos</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xs font-bold text-slate-400 uppercase">Questão</div>
+                                        <div className="text-3xl font-black text-brand-primary">{p1Index + 1}<span className="text-slate-300 text-xl">/{phase1Questions.length}</span></div>
+                                    </div>
+                                </div>
+
+                                <div className="flex-grow flex flex-col justify-center">
+                                    <div className="mb-4 flex items-start justify-between gap-4">
+                                        <div className="flex-grow">
+                                            <span className="inline-block px-3 py-1 bg-indigo-50 text-brand-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{phase1Questions[p1Index].topic}</span>
+                                            <h4 className="text-xl md:text-2xl font-bold text-slate-800 leading-snug">{phase1Questions[p1Index].question}</h4>
+                                        </div>
+                                        <button onClick={() => setP1HintVisible(true)} className="btn-hint flex-shrink-0 bg-yellow-100 text-yellow-700 p-3 rounded-full hover:bg-yellow-200 transition shadow-md border-2 border-yellow-300 transform hover:scale-110 active:scale-95">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    {p1HintVisible && (
+                                        <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg shadow-sm animate-slide-up">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-xl">💡</span>
+                                                <span className="font-bold uppercase text-xs text-yellow-700">Dica do Manual</span>
+                                            </div>
+                                            <p className="text-sm text-yellow-900 font-medium leading-relaxed">{phase1Questions[p1Index].hint}</p>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-3">
+                                        {phase1Questions[p1Index].options.map((opt, idx) => (
+                                            <button 
+                                                key={idx}
+                                                disabled={!!p1Feedback}
+                                                onClick={() => handleP1Answer(opt, phase1Questions[p1Index])}
+                                                className={`w-full text-left p-4 bg-white border-2 rounded-xl font-medium transition shadow-sm group
+                                                    ${p1Feedback 
+                                                        ? (opt.correct ? 'border-brand-success bg-emerald-50 text-brand-success' : 'border-slate-100 text-slate-400')
+                                                        : 'border-slate-100 text-slate-600 hover:border-brand-primary hover:bg-indigo-50 hover:text-brand-primary'
+                                                    }`}
+                                            >
+                                                <span className={`inline-block w-6 h-6 rounded-full text-center text-xs leading-6 mr-3 font-bold transition
+                                                    ${p1Feedback
+                                                        ? (opt.correct ? 'bg-brand-success text-white' : 'bg-slate-100 text-slate-300')
+                                                        : 'bg-slate-100 text-slate-400 group-hover:bg-brand-primary group-hover:text-white'
+                                                    }`}>
+                                                    {p1Feedback && opt.correct ? '✓' : '?'}
+                                                </span>
+                                                {opt.text}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {p1Feedback && (
+                                        <div className={`mt-6 p-5 rounded-xl border-l-4 animate-slide-up shadow-inner ${p1Feedback.isCorrect ? 'bg-emerald-50 border-brand-success' : 'bg-red-50 border-red-500'}`}>
+                                            <div className={`text-lg font-black uppercase mb-2 tracking-wide ${p1Feedback.isCorrect ? 'text-brand-success' : 'text-red-500'}`}>
+                                                {p1Feedback.isCorrect ? 'CORRETO!' : 'INCORRETO'}
+                                            </div>
+                                            <p className="font-medium text-slate-700 leading-relaxed">{p1Feedback.text}</p>
+                                            <div className="mt-4 flex justify-end">
+                                                <button onClick={nextP1Question} className="bg-brand-primary text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-brand-dark transition shadow-lg transform hover:-translate-y-1">Continuar ➜</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Phase 1 Result */}
+                        {phase === 'phase1Result' && (
+                            <div className="glass-panel w-full max-w-lg rounded-3xl p-10 text-center animate-slide-up">
+                                <div className="text-7xl mb-6 animate-bounce">{p1Score >= 7 ? '🎉' : '📚'}</div>
+                                <h2 className={`text-3xl font-black mb-2 ${p1Score >= 7 ? 'text-brand-success' : 'text-red-500'}`}>{p1Score >= 7 ? 'Aprovado!' : 'Reprovado'}</h2>
+                                <p className="text-slate-500 mb-8 font-medium">{p1Score >= 7 ? 'Você demonstrou domínio dos conceitos básicos.' : 'Você precisa de mais estudo nos Fundamentos.'}</p>
+                                
+                                <div className="bg-slate-50 p-6 rounded-2xl mb-8 border border-slate-100">
+                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aproveitamento</div>
+                                    <div className="text-5xl font-black text-brand-primary mt-2">{Math.round((p1Score / phase1Questions.length) * 100)}%</div>
+                                </div>
+
+                                {p1Score >= 7 ? (
+                                    <button onClick={startPhase2Setup} className="w-full bg-brand-success hover:bg-emerald-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/30 transition transform hover:-translate-y-1">
+                                        ASSUMIR O BANCO CENTRAL ➜
+                                    </button>
+                                ) : (
+                                    <button onClick={startPhase1} className="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 text-lg font-bold py-4 rounded-xl transition">
+                                        Tentar Novamente ↺
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Phase 2: Setup */}
+                        {phase === 'phase2Setup' && (
+                            <div className="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-12 animate-slide-up">
+                                <div className="text-center mb-10">
+                                    <span className="bg-brand-primary/10 text-brand-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Simulador Avançado</span>
+                                    <h3 className="text-3xl font-black text-slate-800 mt-3 mb-2">Sala de Guerra Econômica</h3>
+                                    <p className="text-slate-500">Configure o cenário para testar a eficácia das políticas.</p>
+                                </div>
+                                <div className="grid md:grid-cols-3 gap-6 mb-10">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Regime Cambial</label>
+                                        <select value={p2Setup.regime} onChange={(e) => setP2Setup({...p2Setup, regime: e.target.value})} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-brand-primary transition">
+                                            <option value="fixo">🛡️ Câmbio Fixo</option>
+                                            <option value="flexivel">💸 Câmbio Flexível</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Mobilidade de Capitais</label>
+                                        <select value={p2Setup.mobility} onChange={(e) => setP2Setup({...p2Setup, mobility: e.target.value})} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-brand-primary transition">
+                                            <option value="perfeita">🌍 Perfeita (Livre Fluxo)</option>
+                                            <option value="imperfeita_alta">📈 Imperfeita (Alta)</option>
+                                            <option value="imperfeita_baixa">📉 Imperfeita (Baixa)</option>
+                                            <option value="nula">🚫 Nula (Sem Mobilidade)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Instrumento</label>
+                                        <select value={p2Setup.policy} onChange={(e) => setP2Setup({...p2Setup, policy: e.target.value})} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-brand-primary transition">
+                                            <option value="fiscal_exp">🏛️ Fiscal Expansionista (G↑)</option>
+                                            <option value="fiscal_contr">🏛️ Fiscal Contracionista (G↓)</option>
+                                            <option value="monetaria_exp">💰 Monetária Expansionista (M↑)</option>
+                                            <option value="monetaria_contr">💰 Monetária Contracionista (M↓)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="text-center">
+                                     <button onClick={runSimulation} className="bg-brand-primary text-white text-xl px-12 py-4 rounded-xl font-bold hover:bg-brand-dark transition shadow-xl shadow-indigo-500/30 transform hover:scale-105 active:scale-95">EXECUTAR POLÍTICA ▶</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Phase 2: Game */}
+                        {phase === 'phase2Game' && simulationSteps.length > 0 && (
+                            <div className="glass-panel w-full max-w-7xl rounded-3xl p-6 animate-slide-up flex flex-col lg:flex-row gap-6 h-[80vh] min-h-[600px]">
+                                <div className="w-full lg:w-4/12 flex flex-col h-full">
+                                    <div className="bg-white rounded-2xl p-6 h-full flex flex-col border border-slate-100 shadow-sm relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-brand-primary"></div>
+                                        <div className="flex justify-between mb-6">
+                                            <span className="text-xs font-black text-brand-primary uppercase tracking-widest">Análise em Tempo Real</span>
+                                            <span className="text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-full">Passo {p2Index + 1}/{simulationSteps.length}</span>
+                                        </div>
+                                        <h4 className="font-bold text-slate-800 text-xl flex-grow leading-snug mb-4">{simulationSteps[p2Index].question}</h4>
+                                        
+                                        <div className="space-y-3 mb-4">
+                                            {simulationSteps[p2Index].options.map((opt, idx) => (
+                                                <button 
+                                                    key={idx} 
+                                                    disabled={!!p2Feedback}
+                                                    onClick={() => handleP2Answer(opt)}
+                                                    className={`w-full text-left p-4 bg-white border-2 rounded-xl font-bold text-slate-600 transition shadow-sm ${p2Feedback ? (opt.correct ? 'border-brand-success text-brand-success bg-emerald-50' : 'border-slate-100 text-slate-400') : 'border-slate-100 hover:border-brand-primary hover:text-brand-primary'}`}
+                                                >
+                                                    {opt.text}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {p2Feedback && (
+                                            <div className={`p-4 rounded-xl text-sm border-l-4 animate-slide-up ${p2Feedback.isCorrect ? 'bg-emerald-50 border-brand-success' : 'bg-red-50 border-red-500'}`}>
+                                                <p className="font-bold mb-3 text-base">{p2Feedback.text}</p>
+                                                <div className="flex gap-2">
+                                                    <button onClick={playGraphAnimation} className="flex-1 bg-indigo-100 text-indigo-700 py-3 rounded-lg font-bold text-xs hover:bg-indigo-200 transition">👁️ VER GRÁFICO</button>
+                                                    <button onClick={nextP2Step} className="flex-1 bg-brand-primary text-white py-3 rounded-lg font-bold text-xs hover:bg-brand-dark transition shadow-lg">PRÓXIMO ➜</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="w-full lg:w-8/12 bg-white rounded-2xl shadow-inner border border-slate-200 p-4 relative flex flex-col">
+                                    <div className="flex justify-between items-center px-2 mb-2">
+                                        <h3 className="text-xs font-bold text-slate-400 uppercase">Monitor IS-LM-BP</h3>
+                                        {graphState.animStage === 1 && <div className="text-xs font-bold text-white bg-purple-500 px-2 py-0.5 rounded animate-pulse">LIVE UPDATE</div>}
+                                    </div>
+                                    <div className="flex-grow relative rounded-xl bg-slate-50 border border-slate-100 overflow-hidden">
+                                        <canvas ref={canvasRef} width={800} height={500} className="w-full h-full" />
+                                        <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow-sm border border-slate-100 text-xs font-bold text-slate-500 flex gap-4">
+                                            <span className="flex items-center"><span className="w-2 h-2 bg-blue-600 rounded-full mr-1.5"></span>IS</span>
+                                            <span className="flex items-center"><span className="w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>LM</span>
+                                            <span className="flex items-center"><span className="w-2 h-2 bg-green-600 rounded-full mr-1.5"></span>BP</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Phase 2 Result */}
+                        {phase === 'phase2Result' && (
+                            <div className="glass-panel w-full max-w-lg rounded-3xl p-10 text-center animate-slide-up">
+                                <div className="text-7xl mb-6">📊</div>
+                                <h2 className="text-3xl font-black text-slate-800 mb-2">Análise Concluída</h2>
+                                <p className="text-slate-500 mb-8 font-medium">Ciclo de política encerrado.</p>
+                                <div className="bg-indigo-50 p-6 rounded-2xl mb-8 border border-indigo-100">
+                                    <div className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Moedas Acumuladas</div>
+                                    <div className="text-5xl font-black text-brand-primary mt-2">{playerData?.moedas}</div>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <button onClick={startPhase2Setup} className="w-full bg-brand-primary hover:bg-brand-dark text-white py-4 rounded-xl font-bold shadow-lg transition">Nova Simulação</button>
+                                    <button onClick={() => setPhase('intro')} className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 py-4 rounded-xl font-bold transition">Menu Principal</button>
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
