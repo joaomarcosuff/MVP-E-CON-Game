@@ -28,7 +28,28 @@ export interface SimulationStep {
     };
 }
 
-export type GamePhase = 'intro' | 'phase1' | 'phase1Result' | 'phase2Setup' | 'phase2Game' | 'phase2Result';
+export interface Module {
+    id: string;
+    title: string;
+    status: 'locked' | 'unlocked' | 'completed';
+    type?: 'quiz' | 'simulation';
+    questions: Question[];
+}
+
+export interface Track {
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: string;
+    description: string;
+    modules: Module[];
+}
+
+export interface Lessons {
+    [key: string]: Track;
+}
+
+export type GamePhase = 'intro' | 'dashboard' | 'track' | 'lesson' | 'result' | 'simSetup' | 'simGame' | 'simResult';
 
 export interface GraphState {
     isShift: number;

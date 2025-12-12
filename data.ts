@@ -1,117 +1,149 @@
-import { Question, SimulationStep } from "./types";
+import { Lessons, SimulationStep } from "./types";
 
-export const phase1Questions: Question[] = [
-    {
-        topic: "1. Identidades Contábeis",
-        question: "Em uma economia aberta, se a Poupança Nacional (Privada + Pública) for menor que o Investimento (S < I), o que deve ocorrer com o setor externo?",
-        hint: "Lembre-se da identidade S = I + CC. Se S é pouco para cobrir I, precisamos de poupança de quem?",
-        options: [
-            { text: "Haverá um Déficit em Transações Correntes (Poupança Externa positiva).", correct: true },
-            { text: "Haverá um Superávit em Transações Correntes.", correct: false },
-            { text: "O Governo deve necessariamente aumentar impostos.", correct: false }
-        ],
-        explanation: "Se S < I, o país precisa captar recursos externos para financiar o investimento, o que contabilmente aparece como um Déficit em Transações Correntes (CC < 0) ou Poupança Externa positiva."
+export const lessons: Lessons = {
+    math: {
+        id: "MAT",
+        title: "Matemática Aplicada",
+        subtitle: "O Ferramental",
+        icon: "📐",
+        description: "Domine o cálculo necessário para entender os modelos econômicos.",
+        modules: [
+            {
+                id: "1-00",
+                title: "Pré-Cálculo: Funções",
+                status: "unlocked",
+                type: "quiz",
+                questions: [
+                    {
+                        topic: "Funções Lineares",
+                        question: "Uma firma tem custo fixo de R$ 100 e custo variável de R$ 5 por unidade. Qual a função Custo Total C(q)?",
+                        hint: "Pense na estrutura: Custo Total = Parte Fixa + (Custo Unitário × Quantidade).",
+                        options: [
+                            { text: "C(q) = 100 + 5q", correct: true },
+                            { text: "C(q) = 5 + 100q", correct: false },
+                            { text: "C(q) = 105q", correct: false }
+                        ],
+                        explanation: "Em C(q) = a + bq, 'a' é o intercepto (custo fixo, não depende de q) e 'b' é a inclinação (custo marginal/variável)."
+                    }
+                ]
+            },
+            {
+                id: "1-0",
+                title: "Derivadas Básicas",
+                status: "locked",
+                type: "quiz",
+                questions: []
+            }
+        ]
     },
-    {
-        topic: "1. PIB vs PNB",
-        question: "O Brasil historicamente possui um PNB menor que o PIB (PNB < PIB). Qual a razão estrutural para isso?",
-        hint: "PIB mede o produzido NO território. PNB mede a renda dos nacionais. O que sai do país?",
-        options: [
-            { text: "O país envia mais Renda Líquida ao Exterior (RLEE) do que recebe.", correct: true },
-            { text: "O país tem uma balança comercial deficitária.", correct: false },
-            { text: "O país não tem empresas multinacionais.", correct: false }
-        ],
-        explanation: "Como muitas multinacionais operam no Brasil e enviam lucros para fora, a Renda Líquida Enviada ao Exterior é alta, fazendo com que a renda dos nacionais (PNB) seja menor que a produção interna (PIB)."
+    micro: {
+        id: "MIC",
+        title: "Microeconomia",
+        subtitle: "Agentes e Escolhas",
+        icon: "🛒",
+        description: "Teoria do Consumidor, Firma e Estruturas de Mercado.",
+        modules: [
+            {
+                id: "MIC-01",
+                title: "Teoria do Consumidor",
+                status: "unlocked",
+                type: "quiz",
+                questions: [
+                    {
+                        topic: "1. Preferências (Concreto)",
+                        question: "Imagine que você está na cantina. Você gosta tanto de Café (X) quanto de Pão de Queijo (Y). Se eu tirar 1 Pão de Queijo seu, quantos Cafés eu preciso te dar para você ficar IGUALMENTE feliz?",
+                        hint: "Estamos buscando uma troca que mantenha sua satisfação constante. Isso é a base da 'Indiferença'.",
+                        options: [
+                            { text: "A quantidade exata que compensa a perda, mantendo a Utilidade constante.", correct: true },
+                            { text: "O máximo de cafés que eu puder comprar com meu dinheiro.", correct: false },
+                            { text: "Sempre 1 café por 1 pão de queijo, independente de quantos eu já tenho.", correct: false }
+                        ],
+                        explanation: "GASING (Story): Isso define a Taxa Marginal de Substituição (TMS). Se você troca X por Y e continua com a mesma 'felicidade', você está andando sobre uma Curva de Indiferença."
+                    },
+                    {
+                        topic: "2. Curvas de Indiferença (Visual)",
+                        question: "Pense em uma Montanha (O Morro da Utilidade). A altura da montanha representa sua felicidade. O que representa uma Curva de Indiferença nesse mapa?",
+                        hint: "Se você caminhar ao redor da montanha sem subir nem descer, você mantém a mesma altura.",
+                        options: [
+                            { text: "É como uma curva de nível no mapa: todos os pontos na linha têm a mesma altura (utilidade).", correct: true },
+                            { text: "É o caminho mais rápido para chegar ao topo da montanha.", correct: false },
+                            { text: "É a inclinação da subida em um ponto específico.", correct: false }
+                        ],
+                        explanation: "GASING (Analogy): Assim como em um mapa topográfico, onde linhas conectam pontos de mesma altitude, a Curva de Indiferença conecta cestas de bens (X, Y) que dão o mesmo nível de satisfação."
+                    },
+                    {
+                        topic: "3. Função Utilidade (Abstrato)",
+                        question: "Vamos formalizar. Seja U(x, y) = x · y (Cobb-Douglas). A Cesta A tem (x=2, y=8) e a Cesta B tem (x=4, y=4). Qual cesta o consumidor prefere?",
+                        hint: "Calcule U para os dois casos multiplicando x por y.",
+                        options: [
+                            { text: "O consumidor é Indiferente (ambas geram U = 16).", correct: true },
+                            { text: "Prefere a Cesta A porque tem mais Y.", correct: false },
+                            { text: "Prefere a Cesta B porque é mais equilibrada.", correct: false }
+                        ],
+                        explanation: "CPA (Abstract): U(A) = 2*8 = 16. U(B) = 4*4 = 16. Como U(A) = U(B), ambas as cestas estão na mesma Curva de Indiferença (U=16)."
+                    }
+                ]
+            }
+        ]
     },
-    {
-        topic: "1. Balanço de Pagamentos",
-        question: "O que significa dizer que o Balanço de Pagamentos (BP) é contabilmente igual a zero?",
-        hint: "O BP é um método de partidas dobradas. Todo débito tem um crédito.",
-        options: [
-            { text: "Que a soma de Transações Correntes, Conta Capital/Financeira e Erros e Omissões deve ser nula.", correct: true },
-            { text: "Que o país não pode ter dívida externa.", correct: false },
-            { text: "Que exportações devem ser iguais a importações.", correct: false }
-        ],
-        explanation: "O BP é uma identidade contábil. Um déficit em uma conta (ex: Comercial) deve ser necessariamente financiado por superávit em outra (ex: Financeira) ou variação de reservas."
-    },
-    {
-        topic: "1. Abordagem da Absorção",
-        question: "Se a Absorção Interna (Consumo + Investimento + Gastos) cair enquanto o Produto (Y) permanece constante, o que acontece com a Balança Comercial?",
-        hint: "Y - A = NX. Se A cai e Y é fixo, o saldo NX aumenta ou diminui?",
-        options: [
-            { text: "A Balança Comercial melhora (tende ao superávit).", correct: true },
-            { text: "A Balança Comercial piora.", correct: false },
-            { text: "A taxa de juros aumenta.", correct: false }
-        ],
-        explanation: "Reduzir a absorção interna (menos gastos domésticos) libera produção para o mercado externo ou reduz importações, melhorando o saldo comercial (NX)."
-    },
-    {
-        topic: "2. Agregados Monetários",
-        question: "Qual agregado monetário inclui títulos públicos de alta liquidez e depósitos de poupança, sendo mais amplo que o M1?",
-        hint: "M1 é só dinheiro vivo e conta corrente. M2, M3 e M4 vão adicionando ativos menos líquidos.",
-        options: [
-            { text: "M2, M3 ou M4 (dependendo da definição exata do país, mas é mais amplo que M1).", correct: true },
-            { text: "Base Monetária (B).", correct: false },
-            { text: "Papel-Moeda em Poder do Público (PMPP).", correct: false }
-        ],
-        explanation: "M1 é o mais restrito. M2, M3 e M4 (Meios de Pagamento Ampliados) incluem ativos que rendem juros e têm liquidez quase imediata, como poupança e títulos."
-    },
-    {
-        topic: "2. Criação de Moeda",
-        question: "Como os bancos comerciais criam moeda escritural?",
-        hint: "Eles não imprimem notas. Eles fazem algo com os depósitos que recebem.",
-        options: [
-            { text: "Emprestando uma parte dos depósitos à vista que recebem (Reserva Fracionária).", correct: true },
-            { text: "Imprimindo cédulas com autorização do BC.", correct: false },
-            { text: "Apenas guardando o dinheiro em cofres.", correct: false }
-        ],
-        explanation: "Ao emprestar parte do dinheiro depositado (mantendo apenas o compulsório), o banco coloca dinheiro de volta na economia, multiplicando a oferta monetária."
-    },
-    {
-        topic: "1. PIB Real vs Nominal",
-        question: "Se o PIB Nominal cresceu 10% mas a inflação foi de 10% no mesmo período, o que aconteceu com o PIB Real?",
-        hint: "PIB Real desconta a inflação.",
-        options: [
-            { text: "O PIB Real permaneceu estagnado (Crescimento zero).", correct: true },
-            { text: "O PIB Real cresceu 20%.", correct: false },
-            { text: "O PIB Real cresceu 10%.", correct: false }
-        ],
-        explanation: "O crescimento nominal foi puramente aumento de preços. Em termos de volume de bens produzidos (Real), a economia não cresceu."
-    },
-    {
-        topic: "2. Equação de Fisher",
-        question: "Segundo a Equação de Fisher, se a taxa de juros nominal é 15% e a inflação esperada é 5%, qual é a taxa de juros real aproximada?",
-        hint: "Juro Real = Juro Nominal - Inflação.",
-        options: [
-            { text: "10%", correct: true },
-            { text: "20%", correct: false },
-            { text: "75% (15 x 5)", correct: false }
-                ],
-        explanation: "A taxa real é o ganho de poder de compra. 15% (Nominal) - 5% (Inflação) = 10% (Real)."
-    },
-    {
-        topic: "2. Taxa de Câmbio",
-        question: "O que é a Taxa de Câmbio Real?",
-        hint: "Não é apenas o preço da moeda, mas o preço relativo dos PRODUTOS entre dois países.",
-        options: [
-            { text: "A taxa nominal ajustada pela relação de preços (inflação) interna e externa.", correct: true },
-            { text: "O valor do dólar turismo.", correct: false },
-            { text: "A taxa de juros internacional.", correct: false }
-        ],
-        explanation: "Câmbio Real mede a competitividade. É a taxa nominal multiplicada pela razão entre preços externos e internos (e = E * P*/P)."
-    },
-    {
-        topic: "2. Funções da Moeda",
-        question: "Quando precificamos uma mercadoria em Reais (R$), qual função da moeda estamos utilizando?",
-        hint: "Estamos usando a moeda para medir valor, como uma régua.",
-        options: [
-            { text: "Unidade de Conta.", correct: true },
-            { text: "Reserva de Valor.", correct: false },
-            { text: "Meio de Troca.", correct: false }
-        ],
-        explanation: "Unidade de Conta é a função de servir como medida comum de valor para bens e serviços."
+    macro: {
+        id: "MAC",
+        title: "Macroeconomia",
+        subtitle: "Sistemas Econômicos",
+        icon: "🏦",
+        description: "PIB, Inflação, Câmbio e Modelos IS-LM-BP.",
+        modules: [
+            {
+                id: "MAC-01",
+                title: "Contabilidade Nacional",
+                status: "unlocked",
+                type: "quiz",
+                questions: [
+                    {
+                        topic: "1. Identidades Contábeis",
+                        question: "Em uma economia aberta, se a Poupança Nacional (Privada + Pública) for menor que o Investimento (S < I), o que deve ocorrer com o setor externo?",
+                        hint: "Lembre-se da identidade S = I + CC. Se S é pouco para cobrir I, precisamos de poupança de quem?",
+                        options: [
+                            { text: "Haverá um Déficit em Transações Correntes (Poupança Externa positiva).", correct: true },
+                            { text: "Haverá um Superávit em Transações Correntes.", correct: false },
+                            { text: "O Governo deve necessariamente aumentar impostos.", correct: false }
+                        ],
+                        explanation: "Se S < I, o país precisa captar recursos externos para financiar o investimento, o que contabilmente aparece como um Déficit em Transações Correntes (CC < 0) ou Poupança Externa positiva."
+                    },
+                    {
+                        topic: "1. PIB vs PNB",
+                        question: "O Brasil historicamente possui um PNB menor que o PIB (PNB < PIB). Qual a razão estrutural para isso?",
+                        hint: "PIB mede o produzido NO território. PNB mede a renda dos nacionais. O que sai do país?",
+                        options: [
+                            { text: "O país envia mais Renda Líquida ao Exterior (RLEE) do que recebe.", correct: true },
+                            { text: "O país tem uma balança comercial deficitária.", correct: false },
+                            { text: "O país não tem empresas multinacionais.", correct: false }
+                        ],
+                        explanation: "Como muitas multinacionais operam no Brasil e enviam lucros para fora, a Renda Líquida Enviada ao Exterior é alta, fazendo com que a renda dos nacionais (PNB) seja menor que a produção interna (PIB)."
+                    },
+                    {
+                        topic: "1. Balanço de Pagamentos",
+                        question: "O que significa dizer que o Balanço de Pagamentos (BP) é contabilmente igual a zero?",
+                        hint: "O BP é um método de partidas dobradas. Todo débito tem um crédito.",
+                        options: [
+                            { text: "Que a soma de Transações Correntes, Conta Capital/Financeira e Erros e Omissões deve ser nula.", correct: true },
+                            { text: "Que o país não pode ter dívida externa.", correct: false },
+                            { text: "Que exportações devem ser iguais a importações.", correct: false }
+                        ],
+                        explanation: "O BP é uma identidade contábil. Um déficit em uma conta (ex: Comercial) deve ser necessariamente financiado por superávit em outra (ex: Financeira) ou variação de reservas."
+                    }
+                ]
+            },
+            {
+                id: "MAC-02",
+                title: "Simulador Mundell-Fleming",
+                status: "unlocked",
+                type: "simulation",
+                questions: []
+            }
+        ]
     }
-];
+};
 
 export function generateMundellFlemingLogic(regime: string, mobility: string, policy: string): SimulationStep[] {
     let isFiscal = policy.includes('fiscal');

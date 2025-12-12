@@ -1,133 +1,68 @@
-<script type="importmap">
-{
-  "imports": {
-    "firebase/": "https://esm.sh/firebase@^12.6.0/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
-  }
-}
-</script>
-        // --- NEW DATA ARCHITECTURE: CATEGORIZED TRACKS ---
-        
-        const lessons = {
-            math: {
-                id: "MAT",
-                title: "Matemática Aplicada",
-                subtitle: "O Ferramental",
-                icon: "📐",
-                description: "Domine o cálculo necessário para entender os modelos econômicos.",
-                modules: [
-                    {
-                        id: "1-00", // ID solicitado
-                        title: "Pré-Cálculo: Funções",
-                        status: "unlocked", 
-                        questions: [
-                            {
-                                topic: "Funções Lineares",
-                                question: "Uma firma tem custo fixo de R$ 100 e custo variável de R$ 5 por unidade. Qual a função Custo Total C(q)?",
-                                hint: "Pense na estrutura: Custo Total = Parte Fixa + (Custo Unitário × Quantidade).",
-                                options: [
-                                    { text: "C(q) = 100 + 5q", correct: true },
-                                    { text: "C(q) = 5 + 100q", correct: false },
-                                    { text: "C(q) = 105q", correct: false }
-                                ],
-                                explanation: "Em C(q) = a + bq, 'a' é o intercepto (custo fixo, não depende de q) e 'b' é a inclinação (custo marginal/variável)."
-                            }
-                        ]
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EconoQuest - MVP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "firebase/": "https://esm.sh/firebase@^12.6.0/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+      }
+    }
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            primary: '#4338ca',
+                            accent: '#f59e0b',
+                            success: '#10b981',
+                            danger: '#ef4444'
+                        }
                     },
-                    {
-                        id: "1-0", // ID solicitado
-                        title: "Derivadas Básicas",
-                        status: "locked",
-                        questions: []
-                    }
-                ]
-            },
-            micro: {
-                id: "MIC",
-                title: "Microeconomia",
-                subtitle: "Agentes e Escolhas",
-                icon: "🛒",
-                description: "Teoria do Consumidor, Firma e Estruturas de Mercado.",
-                modules: [
-                    {
-                        id: "MIC-01",
-                        title: "Teoria do Consumidor",
-                        status: "unlocked",
-                        questions: [
-                            // GASING + CPA: CONCRETO (Story/Analogy)
-                            {
-                                topic: "1. Preferências (Concreto)",
-                                question: "Imagine que você está na cantina. Você gosta tanto de Café (X) quanto de Pão de Queijo (Y). Se eu tirar 1 Pão de Queijo seu, quantos Cafés eu preciso te dar para você ficar IGUALMENTE feliz?",
-                                hint: "Estamos buscando uma troca que mantenha sua satisfação constante. Isso é a base da 'Indiferença'.",
-                                options: [
-                                    { text: "A quantidade exata que compensa a perda, mantendo a Utilidade constante.", correct: true },
-                                    { text: "O máximo de cafés que eu puder comprar com meu dinheiro.", correct: false },
-                                    { text: "Sempre 1 café por 1 pão de queijo, independente de quantos eu já tenho.", correct: false }
-                                ],
-                                explanation: "GASING (Story): Isso define a Taxa Marginal de Substituição (TMS). Se você troca X por Y e continua com a mesma 'felicidade', você está andando sobre uma Curva de Indiferença."
-                            },
-                            // GASING + CPA: PICTÓRICO (Visual Analogy)
-                            {
-                                topic: "2. Curvas de Indiferença (Visual)",
-                                question: "Pense em uma Montanha (O Morro da Utilidade). A altura da montanha representa sua felicidade. O que representa uma Curva de Indiferença nesse mapa?",
-                                hint: "Se você caminhar ao redor da montanha sem subir nem descer, você mantém a mesma altura.",
-                                options: [
-                                    { text: "É como uma curva de nível no mapa: todos os pontos na linha têm a mesma altura (utilidade).", correct: true },
-                                    { text: "É o caminho mais rápido para chegar ao topo da montanha.", correct: false },
-                                    { text: "É a inclinação da subida em um ponto específico.", correct: false }
-                                ],
-                                explanation: "GASING (Analogy): Assim como em um mapa topográfico, onde linhas conectam pontos de mesma altitude, a Curva de Indiferença conecta cestas de bens (X, Y) que dão o mesmo nível de satisfação."
-                            },
-                            // GASING + CPA: ABSTRATO (Numbers/Formula)
-                            {
-                                topic: "3. Função Utilidade (Abstrato)",
-                                question: "Vamos formalizar. Seja U(x, y) = x · y (Cobb-Douglas). A Cesta A tem (x=2, y=8) e a Cesta B tem (x=4, y=4). Qual cesta o consumidor prefere?",
-                                hint: "Calcule U para os dois casos multiplicando x por y.",
-                                options: [
-                                    { text: "O consumidor é Indiferente (ambas geram U = 16).", correct: true },
-                                    { text: "Prefere a Cesta A porque tem mais Y.", correct: false },
-                                    { text: "Prefere a Cesta B porque é mais equilibrada.", correct: false }
-                                ],
-                                explanation: "CPA (Abstract): U(A) = 2*8 = 16. U(B) = 4*4 = 16. Como U(A) = U(B), ambas as cestas estão na mesma Curva de Indiferença (U=16)."
-                            }
-                        ]
-                    }
-                ]
-            },
-            macro: {
-                id: "MAC",
-                title: "Macroeconomia",
-                subtitle: "Sistemas Econômicos",
-                icon: "🏦",
-                description: "PIB, Inflação, Câmbio e Modelos IS-LM-BP.",
-                modules: [
-                    {
-                        id: "MAC-01",
-                        title: "Contabilidade Nacional",
-                        status: "unlocked",
-                        questions: [
-                            {
-                                topic: "Identidades Básicas",
-                                question: "Em uma economia aberta, partindo da identidade S - I = NX. Se o Investimento (I) supera a Poupança Doméstica (S), como isso é financiado?",
-                                hint: "Se falta dinheiro interno (S), precisamos pegar de fora.",
-                                options: [
-                                    { text: "Através de Poupança Externa (Déficit em Transações Correntes).", correct: true },
-                                    { text: "Através de aumento de exportações.", correct: false },
-                                    { text: "O investimento deve ser reduzido obrigatoriamente.", correct: false }
-                                ],
-                                explanation: "S < I implica que NX < 0 (Déficit Comercial). O país importa capitais (Poupança Externa > 0) para fechar a conta."
-                            }
-                        ]
+                    animation: {
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
                     },
-                    {
-                        id: "MAC-02",
-                        title: "Simulador Mundell-Fleming",
-                        status: "unlocked",
-                        type: "simulation",
-                        questions: []
+                    keyframes: {
+                        slideUp: { from: { opacity: 0, transform: 'translateY(20px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+                        fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } }
                     }
-                ]
+                }
             }
-        };
+        }
+    </script>
+    <style>
+        body { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); overflow-x: hidden; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .track-card {
+            transition: all 0.3s ease;
+        }
+        .track-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col font-sans selection:bg-brand-primary selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+</body>
+</html>
