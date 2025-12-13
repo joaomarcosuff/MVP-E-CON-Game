@@ -57,6 +57,21 @@ const LatexText: React.FC<{ text: string; className?: string }> = ({ text, class
     );
 };
 
+const ProgressBar: React.FC<{ current: number; total: number }> = ({ current, total }) => {
+    // Calculates percentage (current is 1-based index for display, so current/total)
+    // Ensures it doesn't exceed 100%
+    const percentage = Math.min(100, Math.max(0, (current / total) * 100));
+    
+    return (
+        <div className="w-full bg-slate-200 rounded-full h-3 mb-4 overflow-hidden">
+            <div 
+                className="bg-brand-success h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(16,185,129,0.4)]" 
+                style={{ width: `${percentage}%` }}
+            ></div>
+        </div>
+    );
+};
+
 // --- COMPONENTS ---
 
 const HeaderStats: React.FC<{ progress: PlayerProgress }> = ({ progress }) => (
@@ -88,6 +103,8 @@ const QuizView: React.FC<{
     const [inputVal, setInputVal] = useState('');
     const [correctCount, setCorrectCount] = useState(0);
 
+    // Dynamic reference to total questions in this lesson
+    const totalQuestions = lesson.questions.length;
     const question = lesson.questions[qIndex];
 
     const handleSubmit = (ans: string) => {
@@ -103,7 +120,7 @@ const QuizView: React.FC<{
         } else if (question.type === 'multiple_choice') {
              isCorrect = userAns === correctAns;
         } else if (question.type === 'graph_point') {
-             // Handled by handleGraphClick, this block might be redundant for that type but safe
+             // Handled by handleGraphClick
              isCorrect = ans === 'correct'; 
         }
 
@@ -146,14 +163,23 @@ const QuizView: React.FC<{
     const handleNext = () => {
         setFeedback(null);
         setInputVal('');
-        if (qIndex < lesson.questions.length - 1) {
+        
+        // CORRECTION: Logic to ensure ALL questions are shown
+        // Uses totalQuestions (questions.length) as the source of truth
+        if (qIndex < totalQuestions - 1) {
             setQIndex(prev => prev + 1);
         } else {
-            // Finish
-            const success = (correctCount / lesson.questions.length) >= progressionRules.unlock_logic.min_accuracy_to_unlock;
+            // End of Lesson Logic
+            const accuracy = correctCount / totalQuestions;
+            const success = accuracy >= progressionRules.unlock_logic.min_accuracy_to_unlock;
+            
             let xp = 0;
             if (success) {
+                // Base XP + Bonus Logic
                 xp = lesson.xp;
+                if (correctCount === totalQuestions) {
+                    xp += progressionRules.xp_system.perfect_lesson_bonus;
+                }
             }
             onComplete(xp, success);
         }
@@ -162,10 +188,12 @@ const QuizView: React.FC<{
     // --- RENDER QUESTION TYPES ---
 
     const renderContent = () => {
+        if (!question) return <div>Carregando...</div>;
+
         // 1. Graph Point Question
         if (question.type === 'graph_point') {
             return (
-                <div className="flex flex-col items-center w-full">
+                <div className="flex flex-col items-center w-full animate-fade-in">
                     <p className="mb-4 text-center font-bold text-slate-700">{question.instruction}</p>
                     <div className="relative w-full max-w-sm aspect-square bg-white border-2 border-slate-200 rounded-xl shadow-inner cursor-crosshair overflow-hidden">
                         <svg viewBox="0 0 300 300" className="w-full h-full" onClick={handleGraphClick}>
@@ -199,7 +227,7 @@ const QuizView: React.FC<{
         if (question.type === 'fill_gap') {
              const parts = question.text?.split('{{gap}}') || ["", ""];
              return (
-                 <div className="text-xl leading-loose text-center font-medium text-slate-700">
+                 <div className="text-xl leading-loose text-center font-medium text-slate-700 animate-fade-in">
                      <span>{parts[0]}</span>
                      <input 
                         type="text" 
@@ -211,7 +239,7 @@ const QuizView: React.FC<{
                      />
                      <span>{parts[1]}</span>
                      {!feedback && (
-                        <button onClick={() => handleSubmit(inputVal)} className="block mx-auto mt-6 bg-brand-primary text-white px-6 py-2 rounded-full font-bold">Verificar</button>
+                        <button onClick={() => handleSubmit(inputVal)} className="block mx-auto mt-6 bg-brand-primary text-white px-6 py-2 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">Verificar</button>
                      )}
                  </div>
              );
@@ -220,7 +248,7 @@ const QuizView: React.FC<{
         // 3. Numeric / Input
         if (question.type === 'numeric' || question.type === 'input') {
             return (
-                <div className="w-full max-w-sm">
+                <div className="w-full max-w-sm animate-fade-in">
                     {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
                     <div className="flex gap-2">
                         <input
@@ -230,13 +258,13 @@ const QuizView: React.FC<{
                             onKeyDown={(e) => e.key === 'Enter' && !feedback && inputVal && handleSubmit(inputVal)}
                             disabled={!!feedback}
                             placeholder="Sua resposta..."
-                            className="flex-1 p-4 border-2 border-slate-300 rounded-xl font-bold text-center outline-none focus:border-brand-primary"
+                            className="flex-1 p-4 border-2 border-slate-300 rounded-xl font-bold text-center outline-none focus:border-brand-primary transition-colors"
                         />
                         {!feedback && (
                             <button 
                                 onClick={() => handleSubmit(inputVal)}
                                 disabled={!inputVal}
-                                className="bg-brand-primary text-white px-6 rounded-xl font-bold hover:bg-brand-dark"
+                                className="bg-brand-primary text-white px-6 rounded-xl font-bold hover:bg-brand-dark shadow-lg transition-transform active:scale-95 disabled:opacity-50"
                             >
                                 OK
                             </button>
@@ -248,7 +276,7 @@ const QuizView: React.FC<{
 
         // 4. Multiple Choice (Default)
         return (
-            <div className="w-full">
+            <div className="w-full animate-fade-in">
                 {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
                 <div className="grid gap-3">
                     {question.options?.map((opt, i) => (
@@ -256,15 +284,15 @@ const QuizView: React.FC<{
                             key={i}
                             disabled={!!feedback}
                             onClick={() => handleSubmit(opt)}
-                            className={`p-4 rounded-xl border-2 font-bold text-left transition-all ${
+                            className={`p-4 rounded-xl border-b-4 font-bold text-left transition-all active:border-b-0 active:translate-y-1 ${
                                 feedback 
                                     ? opt.toLowerCase() === question.answer.toLowerCase() 
-                                        ? 'bg-emerald-100 border-emerald-500 text-emerald-800'
-                                        : 'bg-slate-50 border-slate-200 opacity-50'
-                                    : 'bg-white border-slate-200 hover:border-brand-primary hover:bg-indigo-50'
+                                        ? 'bg-emerald-100 border-emerald-500 text-emerald-800' // Correct answer shown
+                                        : 'bg-slate-50 border-slate-200 opacity-50' // Others dimmed
+                                    : 'bg-white border-slate-200 hover:border-brand-primary hover:bg-indigo-50 text-slate-700'
                             }`}
                         >
-                            {opt}
+                            <LatexText text={opt} />
                         </button>
                     ))}
                 </div>
@@ -273,28 +301,52 @@ const QuizView: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="p-4 border-b flex justify-between items-center bg-slate-50">
-                    <button onClick={onExit} className="text-slate-400 font-bold hover:text-red-500">✕ SAIR</button>
-                    <div className="text-sm font-bold text-slate-400">Questão {qIndex + 1} de {lesson.questions.length}</div>
+        <div className="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-slide-up">
+                {/* Header with Progress Bar */}
+                <div className="p-6 border-b border-slate-100 bg-slate-50">
+                    <div className="flex justify-between items-center mb-2">
+                         <button onClick={onExit} className="text-slate-400 font-black hover:text-red-500 transition-colors text-xl">✕</button>
+                         <div className="text-xs font-black uppercase tracking-widest text-brand-primary">
+                            Questão {qIndex + 1} de {totalQuestions}
+                         </div>
+                         <div className="w-5"></div> {/* Spacer for alignment */}
+                    </div>
+                    <ProgressBar current={qIndex + 1} total={totalQuestions} />
                 </div>
                 
+                {/* Content Area */}
                 <div className="p-8 flex-grow overflow-y-auto flex flex-col items-center justify-center">
-                    {question.prompt && <h2 className="text-xl font-bold text-slate-800 text-center mb-6"><LatexText text={question.prompt} /></h2>}
+                    {question?.prompt && (
+                        <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center mb-8 leading-relaxed">
+                            <LatexText text={question.prompt} />
+                        </h2>
+                    )}
                     {renderContent()}
                 </div>
 
+                {/* Feedback Area */}
                 {feedback && (
-                    <div className={`p-6 border-t-2 ${feedback.correct ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-                        <div className="font-bold text-lg mb-2 flex items-center gap-2">
-                            <span>{feedback.correct ? '✅' : '❌'}</span>
-                            <span className={feedback.correct ? 'text-emerald-700' : 'text-red-700'}>
-                                {feedback.correct ? 'Correto!' : 'Incorreto'}
-                            </span>
+                    <div className={`p-6 border-t-2 animate-slide-up ${feedback.correct ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                        <div className="flex flex-col gap-2">
+                            <div className="font-black text-xl flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${feedback.correct ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                                    {feedback.correct ? '✓' : '✕'}
+                                </div>
+                                <span className={feedback.correct ? 'text-emerald-700' : 'text-red-700'}>
+                                    {feedback.correct ? 'Correto!' : 'Incorreto'}
+                                </span>
+                            </div>
+                            <div className="text-slate-600 mb-4 pl-10 leading-relaxed">
+                                <LatexText text={feedback.text} />
+                            </div>
                         </div>
-                        <p className="text-slate-600 mb-4 text-sm"><LatexText text={feedback.text} /></p>
-                        <button onClick={handleNext} className={`w-full py-3 rounded-xl font-bold text-white ${feedback.correct ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                        <button 
+                            onClick={handleNext} 
+                            className={`w-full py-4 rounded-xl font-black text-white text-lg shadow-lg hover:-translate-y-1 transition-all uppercase tracking-wide
+                                ${feedback.correct ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-900/20' : 'bg-red-500 hover:bg-red-600 shadow-red-900/20'}
+                            `}
+                        >
                             CONTINUAR
                         </button>
                     </div>
@@ -400,18 +452,13 @@ export default function App() {
 
                 <div className="space-y-4">
                     {track.modules.map((mod, index) => {
-                        // Logic: Level is unlocked if previous level is complete? 
-                        // Simplified MVP logic: Level 1 always unlocked. Level 2 unlocked if Level 1 has 5 completed lessons (arbitrary check based on curriculum).
-                        // Better logic: Check if all lessons of previous module are in completedLessons.
-                        
+                        // Logic: Level 1 always unlocked. Others require previous module completion.
                         let isUnlocked = true;
                         if (index > 0) {
                             const prevModule = track.modules[index - 1];
                             const allPrevComplete = prevModule.lessons.every(l => progress.completedLessons.includes(l.id));
                             isUnlocked = allPrevComplete;
                         }
-
-                        // Force Level 1 unlock
                         if (index === 0) isUnlocked = true;
 
                         return (
