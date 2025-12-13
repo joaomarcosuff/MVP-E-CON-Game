@@ -9,12 +9,37 @@ export const lessons: Lessons = {
         icon: "📐",
         description: "Fundamentos matemáticos para análise econômica: Cálculo Univariado, Multivariado e Dinâmica.",
         modules: [
-            // --- MATEMÁTICA I (Atualizada com Fases) ---
+            // --- MATEMÁTICA I (Atualizada com Slides e Fases) ---
             {
                 id: "MAT1-P1",
-                title: "I. Mecanismo da Mudança",
+                title: "Fase 1: O Radar de Velocidade",
+                description: "Entendendo a variação instantânea.",
                 status: "unlocked",
                 type: "quiz",
+                xpReward: 150,
+                nextModule: "MAT1-P2",
+                slides: [
+                    {
+                        title: "Do Médio para o Instantâneo (Concreto)",
+                        html: `<p>Imagine que você dirigiu 100km em 2 horas. Sua velocidade <b>média</b> foi 50km/h.</p>
+                               <p class="mt-4">Mas o radar te multou! Por quê? Porque ele mediu sua velocidade <b>instantânea</b> num ponto específico.</p>`,
+                        interactiveType: "speedometer_analogy"
+                    },
+                    {
+                        title: "O Zoom Infinito (Pictórico)",
+                        html: `<p>Matematicamente, transformar média em instantânea é "diminuir o tempo" até zero.</p>
+                               <p class="mt-4">Mova o slider abaixo para ver a <b>Reta Secante</b> (média) virar <b>Reta Tangente</b> (instantânea).</p>`,
+                        interactiveType: "derivative_slider"
+                    },
+                    {
+                        title: "A Fórmula (Abstrato)",
+                        html: `<p>O que você acabou de fazer (zerar a distância) é o <b>Limite</b>.</p>
+                               <div class="bg-indigo-50 p-4 rounded-lg my-4 text-center font-serif text-lg">
+                               $$ f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} $$
+                               </div>
+                               <p>Essa é a definição formal de Derivada.</p>`
+                    }
+                ],
                 questions: [
                     {
                         topic: "Limites (Definição)",
@@ -38,33 +63,49 @@ export const lessons: Lessons = {
                         explanation: "No topo da parábola, a reta tangente é horizontal (derivada = 0)."
                     },
                     {
-                        topic: "Conceito Visual",
-                        question: "A derivada f'(a) representa a inclinação de qual reta?",
-                        hint: "Aquela que toca a curva em apenas um ponto localmente.",
-                        type: "multiple_choice",
-                        options: [
-                            { text: "Reta Tangente", correct: true },
-                            { text: "Reta Secante", correct: false },
-                            { text: "Reta Normal", correct: false }
-                        ],
-                        explanation: "A derivada é o coeficiente angular da reta tangente à curva no ponto a."
-                    },
-                    {
                         topic: "Choque de Oferta",
                         question: "Houve um choque tecnológico positivo. Mova a curva de Oferta.",
                         type: "graph_shift",
                         curveType: "supply",
                         correctDirection: "right", 
                         hint: "Tecnologia aumenta a produção pelo mesmo custo (expansão).",
-                        explanation: "Choque positivo de oferta desloca a curva para a direita (para baixo), reduzindo preços e aumentando quantidade."
+                        explanation: "Choque positivo de oferta desloca a curva para a direita (para baixo)."
                     }
                 ]
             },
             {
                 id: "MAT1-P2",
-                title: "I. Análise de Comportamento",
+                title: "Fase 2: O Formato da Economia",
+                description: "Crescimento, Decrescimento e Concavidade.",
                 status: "unlocked",
                 type: "quiz",
+                xpReward: 200,
+                nextModule: "MAT1-P3",
+                slides: [
+                    {
+                        title: "Acelerando ou Freiando? (Concreto)",
+                        html: `<p>Uma economia pode estar crescendo, mas perdendo força (desacelerando). Como distinguimos isso?</p>
+                               <p class="mt-4">Olhando a <b>Segunda Derivada</b> ($f''$).</p>`
+                    },
+                    {
+                        title: "Sorriso ou Tristeza? (Pictórico)",
+                        html: `<p>Toque nos botões para mudar a concavidade:</p>
+                               <ul class="list-disc pl-5 mt-4 space-y-2">
+                                <li><b>Sorriso (U):</b> $f'' > 0$ (Mínimo)</li>
+                                <li><b>Triste (∩):</b> $f'' < 0$ (Máximo)</li>
+                               </ul>`,
+                        interactiveType: "concavity_toggle"
+                    },
+                    {
+                        title: "Regra da Cadeia (Mecânica)",
+                        html: `<p>A economia é um sistema de engrenagens.</p>
+                               <p class="mt-2">Juros ($x$) afetam Investimento ($u$), que afeta o PIB ($y$).</p>
+                               <div class="bg-indigo-50 p-4 rounded-lg my-4 text-center font-serif text-lg">
+                               $$ \\frac{dy}{dx} = \\frac{dy}{du} \\cdot \\frac{du}{dx} $$
+                               </div>
+                               <p>Multiplicamos os efeitos.</p>`
+                    }
+                ],
                 questions: [
                     {
                         topic: "Concavidade",
@@ -86,26 +127,37 @@ export const lessons: Lessons = {
                             { text: "12", correct: false }
                         ],
                         explanation: "y' = 3(2x+1)² · 2. Em x=0: 3(1)² · 2 = 6."
-                    },
-                    {
-                        topic: "Crescimento",
-                        question: "Se f'(x) = 2x - 4. Em que x a função para de decrescer e começa a crescer?",
-                        hint: "Encontre onde a derivada é zero (ponto crítico).",
-                        type: "multiple_choice",
-                        options: [
-                            { text: "2", correct: true },
-                            { text: "4", correct: false },
-                            { text: "0", correct: false }
-                        ],
-                        explanation: "2x - 4 = 0 → 2x = 4 → x = 2. Antes de 2 ela desce, depois sobe."
                     }
                 ]
             },
             {
                 id: "MAT1-P3",
-                title: "I. Otimização Econômica",
+                title: "Fase 3: O Ponto Ótimo",
+                description: "Como fazer o melhor com o que se tem.",
                 status: "unlocked",
                 type: "quiz",
+                slides: [
+                    {
+                        title: "O Topo da Montanha (Concreto)",
+                        html: `<p>Para maximizar o lucro, você deve subir até não conseguir mais.</p>
+                               <p class="mt-2">O topo é plano. A inclinação é zero.</p>
+                               <div class="bg-green-100 text-green-800 font-bold p-2 rounded mt-2 text-center">Derivada = 0</div>`
+                    },
+                    {
+                        title: "Restrição Orçamentária (Visual)",
+                        html: `<p>Você quer subir a montanha (Utilidade), mas tem uma cerca (Orçamento) te impedindo.</p>
+                               <p class="mt-4">O melhor ponto é onde você <b>encosta</b> na cerca sem cruzá-la.</p>`,
+                        interactiveType: "lagrange_visualizer"
+                    },
+                    {
+                        title: "Multiplicador de Lagrange (Abstrato)",
+                        html: `<p>O método de Lagrange encontra esse ponto de toque.</p>
+                               <div class="bg-indigo-50 p-4 rounded-lg my-4 text-center font-serif text-sm">
+                               $$ \\mathcal{L} = f(x,y) - \\lambda (g(x,y) - c) $$
+                               </div>
+                               <p>$\\lambda$ é o "preço sombra": quanto você ganharia se a cerca mudasse de lugar.</p>`
+                    }
+                ],
                 questions: [
                     {
                         topic: "Maximização de Lucro",
@@ -127,18 +179,6 @@ export const lessons: Lessons = {
                         target: { x: 150, y: 20, tolerance: 30 },
                         hint: "O ponto mais alto da curva.",
                         explanation: "O máximo global ocorre no pico da curva."
-                    },
-                    {
-                        topic: "Lagrange (Conceito)",
-                        question: "No ponto ótimo de Lagrange, as curvas de nível da função objetivo tangenciam a...?",
-                        hint: "É a linha que define o que você PODE gastar.",
-                        type: "multiple_choice",
-                        options: [
-                            { text: "Restrição (Orçamentária)", correct: true },
-                            { text: "Origem dos eixos", correct: false },
-                            { text: "Eixo X", correct: false }
-                        ],
-                        explanation: "A otimização ocorre onde a inclinação da função objetivo iguala a inclinação da restrição."
                     }
                 ]
             },

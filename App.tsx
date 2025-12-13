@@ -3,8 +3,153 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db, googleProvider } from './firebaseClient';
-import { PlayerData, Option, Question, SimulationStep, GraphState, GamePhase, Module } from './types';
+import { PlayerData, Option, Question, SimulationStep, GraphState, GamePhase, Module, Slide } from './types';
 import { lessons, generateMundellFlemingLogic, getBpType } from './data';
+
+// --- INTERACTIVE SLIDE COMPONENTS ---
+
+const DerivativeSlider: React.FC = () => {
+    const [h, setH] = useState(50); // h begins large
+    return (
+        <div className="flex flex-col items-center">
+            <svg width="300" height="200" className="border-b-2 border-l-2 border-slate-800 bg-white">
+                {/* Curve f(x) - approximated by Quadratic Bezier */}
+                <path d="M 0 200 Q 150 200 300 0" fill="none" stroke="#cbd5e1" strokeWidth="2" />
+                
+                {/* Fixed Point (x) */}
+                <circle cx="100" cy="155" r="5" fill="#2563eb" />
+                <text x="90" y="180" className="text-xs font-bold fill-slate-600">x</text>
+
+                {/* Moving Point (x+h) - Controlled by Slider */}
+                <circle cx={100 + h} cy={155 - (h * 0.8)} r="5" fill="#ef4444" />
+                <text x={90 + h} y={180} className="text-xs font-bold fill-slate-600">x+h</text>
+
+                {/* Secant/Tangent Line */}
+                <line 
+                    x1="100" y1="155" 
+                    x2={100 + h * 2} y2={155 - (h * 1.6)} 
+                    stroke={h < 5 ? "#10b981" : "#ef4444"} 
+                    strokeWidth={h < 5 ? 3 : 2}
+                    strokeDasharray={h < 5 ? "" : "4"} 
+                />
+            </svg>
+            <div className="mt-4 w-full max-w-xs">
+                <label className="text-xs font-bold text-slate-500 uppercase">Aproxime os pontos (h &rarr; 0)</label>
+                <input 
+                    type="range" min="0" max="100" value={h} 
+                    onChange={(e) => setH(Number(e.target.value))} 
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                />
+                <p className={`text-sm font-bold mt-2 text-center ${h < 5 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {h < 5 ? "✨ Reta Tangente (Derivada) alcançada!" : "Reta Secante (Velocidade Média)"}
+                </p>
+            </div>
+        </div>
+    );
+};
+
+const ConcavityToggle: React.FC = () => {
+    const [isHappy, setIsHappy] = useState(true);
+    return (
+        <div className="flex flex-col items-center">
+            <svg width="200" height="150" className="bg-white rounded-lg shadow-inner border border-slate-100 mb-4">
+                <path 
+                    d={isHappy ? "M 20 20 Q 100 150 180 20" : "M 20 130 Q 100 0 180 130"} 
+                    fill="none" 
+                    stroke={isHappy ? "#10b981" : "#ef4444"} 
+                    strokeWidth="4" 
+                    strokeLinecap="round"
+                />
+            </svg>
+            <div className="flex gap-4">
+                <button onClick={() => setIsHappy(true)} className={`px-4 py-2 rounded-xl font-bold transition-all ${isHappy ? "bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400" : "bg-slate-100 text-slate-400"}`}>
+                    😊 f'' &gt; 0
+                </button>
+                <button onClick={() => setIsHappy(false)} className={`px-4 py-2 rounded-xl font-bold transition-all ${!isHappy ? "bg-red-100 text-red-700 ring-2 ring-red-400" : "bg-slate-100 text-slate-400"}`}>
+                    ☹️ f'' &lt; 0
+                </button>
+            </div>
+            <p className="mt-2 text-sm font-bold text-slate-600">{isHappy ? "Convexa (Mínimo)" : "Côncava (Máximo)"}</p>
+        </div>
+    );
+};
+
+const LagrangeVisualizer: React.FC = () => {
+    return (
+        <div className="flex flex-col items-center">
+            <div className="relative w-[300px] h-[200px] border border-slate-200 bg-white rounded-lg shadow-sm overflow-hidden">
+                <svg width="100%" height="100%">
+                    {/* Isoquants */}
+                    <path d="M 10 190 Q 50 50 190 10" fill="none" stroke="#cbd5e1" strokeWidth="2" />
+                    <path d="M 40 190 Q 80 80 190 40" fill="none" stroke="#94a3b8" strokeWidth="2" />
+                    
+                    {/* Budget Line */}
+                    <line x1="0" y1="150" x2="150" y2="0" stroke="#ef4444" strokeWidth="3" />
+                    
+                    {/* Tangency Point */}
+                    <circle cx="75" cy="75" r="6" fill="#f59e0b" stroke="white" strokeWidth="2" />
+                </svg>
+                <div className="absolute top-[60px] left-[90px] bg-white/90 px-2 py-1 rounded shadow text-[10px] font-bold text-slate-600">
+                    Ponto Ótimo
+                </div>
+            </div>
+            <p className="mt-3 text-sm text-slate-500 text-center max-w-xs">
+                O ponto ótimo é o único onde você toca a curva mais alta possível sem estourar o orçamento (linha vermelha).
+            </p>
+        </div>
+    );
+};
+
+const SpeedometerAnalogy: React.FC = () => {
+    const [mode, setMode] = useState<'avg' | 'inst'>('avg');
+    return (
+        <div className="flex flex-col items-center gap-6">
+            <div className="relative w-48 h-24 bg-slate-100 rounded-t-full border-4 border-slate-300 overflow-hidden flex justify-center items-end pb-2">
+                <div className="absolute bottom-0 w-2 h-20 bg-slate-800 origin-bottom transition-transform duration-500 ease-out" style={{transform: `rotate(${mode === 'avg' ? '-45deg' : '45deg'})`}}></div>
+                <span className={`text-2xl font-black z-10 ${mode === 'avg' ? 'text-slate-500' : 'text-red-500'}`}>{mode === 'avg' ? '50' : '110'}</span>
+            </div>
+            <div className="flex gap-2">
+                <button onClick={() => setMode('avg')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${mode==='avg'?'bg-brand-primary text-white shadow-lg scale-105':'bg-slate-200 text-slate-400'}`}>Média (2h)</button>
+                <button onClick={() => setMode('inst')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${mode==='inst'?'bg-red-500 text-white shadow-lg scale-105':'bg-slate-200 text-slate-400'}`}>Instantânea</button>
+            </div>
+            <p className="text-sm text-center font-medium text-slate-600 max-w-xs">
+                {mode === 'avg' ? "Média em um longo intervalo de tempo." : "A velocidade exata no momento do radar (h -> 0)!"}
+            </p>
+        </div>
+    )
+};
+
+const InteractiveContent: React.FC<{ type: string }> = ({ type }) => {
+    if (type === "derivative_slider") return <DerivativeSlider />;
+    if (type === "concavity_toggle") return <ConcavityToggle />;
+    if (type === "lagrange_visualizer") return <LagrangeVisualizer />;
+    if (type === "speedometer_analogy") return <SpeedometerAnalogy />;
+    return null;
+};
+
+const SlideRenderer: React.FC<{ slide: Slide, onNext: () => void, isLast: boolean }> = ({ slide, onNext, isLast }) => {
+    return (
+        <div className="flex flex-col h-full animate-fade-in">
+            <h3 className="text-2xl font-black text-slate-800 mb-6">{slide.title}</h3>
+            
+            <div className="prose prose-slate prose-lg mb-8 text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: slide.html }} />
+            
+            <div className="flex-grow flex items-center justify-center bg-slate-50 rounded-2xl border-2 border-slate-100 p-6 mb-8 shadow-inner">
+                 {slide.interactiveType ? (
+                     <InteractiveContent type={slide.interactiveType} />
+                 ) : (
+                     <div className="text-slate-300 font-bold">Conteúdo Visual</div>
+                 )}
+            </div>
+
+            <button onClick={onNext} className="w-full bg-brand-primary text-white py-4 rounded-xl font-bold hover:bg-brand-dark transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                {isLast ? "Começar Desafio ⚡" : "Próximo Slide ➜"}
+            </button>
+        </div>
+    );
+}
+
+// --- MAIN APP ---
 
 const App: React.FC = () => {
     // --- State Management ---
@@ -17,6 +162,10 @@ const App: React.FC = () => {
     // Navigation State
     const [activeTrackKey, setActiveTrackKey] = useState<string | null>(null);
     const [activeModule, setActiveModule] = useState<Module | null>(null);
+
+    // Lesson (Slides) State
+    const [viewingSlides, setViewingSlides] = useState(false);
+    const [slideIndex, setSlideIndex] = useState(0);
 
     // Quiz State (Lesson)
     const [qIndex, setQIndex] = useState(0);
@@ -113,6 +262,14 @@ const App: React.FC = () => {
         if (mod.type === 'simulation') {
             setPhase('simSetup');
         } else {
+            // Check for Slides
+            if (mod.slides && mod.slides.length > 0) {
+                setViewingSlides(true);
+                setSlideIndex(0);
+            } else {
+                setViewingSlides(false);
+            }
+            
             // Quiz Setup
             setQIndex(0);
             setQScore(0);
@@ -181,6 +338,14 @@ const App: React.FC = () => {
             setSliderValue(0);
         } else {
             setPhase('result');
+        }
+    };
+
+    const nextSlide = () => {
+        if (activeModule && activeModule.slides && slideIndex < activeModule.slides.length - 1) {
+            setSlideIndex(prev => prev + 1);
+        } else {
+            setViewingSlides(false); // End slides, start quiz
         }
     };
 
@@ -355,7 +520,7 @@ const App: React.FC = () => {
         // 1. Multiple Choice (Default)
         if (!q.type || q.type === 'multiple_choice') {
             return (
-                <div className="space-y-3 mt-6">
+                <div className="space-y-3 mt-6 animate-fade-in">
                     {q.options?.map((opt, i) => (
                         <button key={i} onClick={() => handleMCAnswer(opt, q)} disabled={!!qFeedback} className={`w-full p-4 rounded-xl border-2 text-left font-bold transition-all ${qFeedback ? (opt.correct ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-white border-slate-100 text-slate-400') : 'bg-white border-slate-100 hover:border-brand-primary text-slate-600'}`}>
                             {opt.text}
@@ -369,7 +534,7 @@ const App: React.FC = () => {
         if (q.type === 'fill_gap' && q.gapText) {
             const parts = q.gapText.split('{{gap}}');
             return (
-                <div className="mt-8 flex flex-col items-center">
+                <div className="mt-8 flex flex-col items-center animate-fade-in">
                     <div className="text-xl font-medium leading-loose text-center mb-6">
                         {parts[0]}
                         <input 
@@ -391,7 +556,7 @@ const App: React.FC = () => {
         // 3. Graph Point (Click on SVG)
         if (q.type === 'graph_point' && q.svgPath) {
             return (
-                <div className="mt-6 flex flex-col items-center">
+                <div className="mt-6 flex flex-col items-center animate-fade-in">
                     <div className="relative border-2 border-slate-200 rounded-xl overflow-hidden bg-white cursor-crosshair shadow-sm hover:shadow-md transition-shadow">
                         <svg width="300" height="300" onClick={(e) => handleGraphPointClick(e, q)}>
                             {/* Grid/Axes */}
@@ -421,7 +586,7 @@ const App: React.FC = () => {
         // 4. Graph Shift (Slider)
         if (q.type === 'graph_shift') {
             return (
-                <div className="mt-6 flex flex-col items-center w-full max-w-sm mx-auto">
+                <div className="mt-6 flex flex-col items-center w-full max-w-sm mx-auto animate-fade-in">
                     <svg width="300" height="300" className="border-2 border-slate-200 rounded-xl bg-white mb-6">
                          <line x1="20" y1="280" x2="280" y2="280" stroke="#64748b" strokeWidth="2" /> 
                          <line x1="20" y1="20" x2="20" y2="280" stroke="#64748b" strokeWidth="2" />
@@ -550,30 +715,42 @@ const App: React.FC = () => {
                     </div>
                 )}
 
-                {/* Lesson (Quiz) View */}
+                {/* Lesson (Slides & Quiz) View */}
                 {phase === 'lesson' && activeModule && (
                     <div className="glass-panel p-8 rounded-3xl animate-slide-up w-full max-w-3xl min-h-[500px] flex flex-col">
                         <div className="flex justify-between mb-6">
                             <button onClick={() => setPhase('track')} className="text-slate-400 hover:text-brand-primary">✕ Sair</button>
-                            <span className="font-bold text-brand-primary">Questão {qIndex + 1}/{activeModule.questions.length}</span>
+                            <span className="font-bold text-brand-primary">
+                                {viewingSlides ? `Aula ${slideIndex + 1}/${activeModule.slides?.length || 0}` : `Desafio ${qIndex + 1}/${activeModule.questions.length}`}
+                            </span>
                         </div>
-                        {activeModule.questions.length > 0 ? (
-                            <div className="flex-grow">
-                                <span className="bg-indigo-50 text-brand-primary px-3 py-1 rounded-full text-xs font-bold uppercase">{activeModule.questions[qIndex].topic}</span>
-                                <h3 className="text-2xl font-bold text-slate-800 mt-4 mb-2">{activeModule.questions[qIndex].question}</h3>
-                                
-                                {/* DYNAMIC CONTENT RENDERER */}
-                                {renderQuestionContent(activeModule.questions[qIndex])}
-
-                                {qFeedback && (
-                                    <div className={`mt-6 p-4 rounded-xl border-l-4 ${qFeedback.isCorrect ? 'bg-emerald-50 border-emerald-500' : 'bg-red-50 border-red-500'}`}>
-                                        <p className="font-bold text-slate-800">{qFeedback.text}</p>
-                                        <button onClick={nextQuizQuestion} className="mt-4 bg-brand-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-dark">Próxima</button>
-                                    </div>
-                                )}
-                            </div>
+                        
+                        {/* Render Slides or Quiz */}
+                        {viewingSlides && activeModule.slides ? (
+                            <SlideRenderer 
+                                slide={activeModule.slides[slideIndex]} 
+                                onNext={nextSlide}
+                                isLast={slideIndex === (activeModule.slides.length - 1)}
+                            />
                         ) : (
-                            <div className="text-center py-20 text-slate-400">Conteúdo em Breve</div>
+                            activeModule.questions.length > 0 ? (
+                                <div className="flex-grow animate-fade-in">
+                                    <span className="bg-indigo-50 text-brand-primary px-3 py-1 rounded-full text-xs font-bold uppercase">{activeModule.questions[qIndex].topic}</span>
+                                    <h3 className="text-2xl font-bold text-slate-800 mt-4 mb-2">{activeModule.questions[qIndex].question}</h3>
+                                    
+                                    {/* DYNAMIC CONTENT RENDERER */}
+                                    {renderQuestionContent(activeModule.questions[qIndex])}
+
+                                    {qFeedback && (
+                                        <div className={`mt-6 p-4 rounded-xl border-l-4 animate-slide-up ${qFeedback.isCorrect ? 'bg-emerald-50 border-emerald-500' : 'bg-red-50 border-red-500'}`}>
+                                            <p className="font-bold text-slate-800">{qFeedback.text}</p>
+                                            <button onClick={nextQuizQuestion} className="mt-4 bg-brand-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-dark">Próxima</button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-20 text-slate-400">Conteúdo em Breve</div>
+                            )
                         )}
                     </div>
                 )}

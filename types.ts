@@ -36,6 +36,12 @@ export interface Option {
     correct: boolean;
 }
 
+export interface Slide {
+    title: string;
+    html: string;
+    interactiveType?: string;
+}
+
 export interface SimulationStep {
     question: string;
     hint: string;
@@ -49,9 +55,13 @@ export interface SimulationStep {
 export interface Module {
     id: string;
     title: string;
+    description?: string;
     status: 'locked' | 'unlocked' | 'completed';
     type?: 'quiz' | 'simulation';
+    slides?: Slide[];
     questions: Question[];
+    xpReward?: number;
+    nextModule?: string;
 }
 
 export interface Track {
