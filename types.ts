@@ -1,89 +1,129 @@
 
-export interface PlayerData {
-    nome: string;
-    moedas: number;
-    nivel: number;
-    xp: number;
-}
-
-export type QuestionType = 'multiple_choice' | 'fill_gap' | 'graph_point' | 'graph_shift';
-
 export interface Question {
-    topic: string;
-    question: string; // Instrução principal
-    hint: string;
-    explanation: string;
-    type?: QuestionType; // Opcional, default é multiple_choice
-    
-    // Múltipla Escolha
-    options?: Option[];
-
-    // Fill Gap
-    gapText?: string; // Texto com {{gap}}
-    correctAnswer?: string; // Resposta correta (string)
-
-    // Graph Point
-    svgPath?: string;
-    target?: { x: number; y: number; tolerance: number };
-
-    // Graph Shift
-    curveType?: 'supply' | 'demand';
-    correctDirection?: 'left' | 'right';
+    id: string;
+    type: 'multiple_choice' | 'input';
+    prompt: string;
+    options?: string[]; // For multiple choice
+    answer: string; // The correct answer string
+    hint?: string;
+    feedback?: string;
 }
 
-export interface Option {
-    text: string;
-    correct: boolean;
-}
-
-export interface Slide {
+export interface Lesson {
+    id: string;
     title: string;
-    html: string;
-    interactiveType?: string;
-}
-
-export interface SimulationStep {
-    question: string;
-    hint: string;
-    options: Option[];
-    targetState?: {
-        isShift: number;
-        lmShift: number;
-    };
+    description: string;
+    xp: number;
+    questions: Question[];
 }
 
 export interface Module {
     id: string;
     title: string;
-    description?: string;
-    status: 'locked' | 'unlocked' | 'completed';
-    type?: 'quiz' | 'simulation';
-    slides?: Slide[];
-    questions: Question[];
-    xpReward?: number;
-    nextModule?: string;
+    lessons: Lesson[];
 }
 
 export interface Track {
     id: string;
     title: string;
-    subtitle: string;
     icon: string;
     description: string;
     modules: Module[];
 }
 
-export interface Lessons {
-    [key: string]: Track;
+export interface GameData {
+    tracks: Track[];
 }
 
-export type GamePhase = 'intro' | 'dashboard' | 'track' | 'lesson' | 'result' | 'simSetup' | 'simGame' | 'simResult';
+export interface PlayerProgress {
+    xp: number;
+    level: number;
+    streak: number;
+    completedLessons: string[]; // Array of Lesson IDs
+    hearts: number;
+    lastLoginDate: string;
+}
 
-export interface GraphState {
+export interface ProgressionRules {
+    xp_system: {
+        base_xp_per_question: number;
+        streak_multiplier: number;
+        lesson_completion_bonus: number;
+        perfect_lesson_bonus: number;
+    };
+    unlock_logic: {
+        require_previous_lesson: boolean;
+        min_accuracy_to_unlock: number;
+    };
+    failure_handling: {
+        max_hearts: number;
+        hearts_regen_time_minutes: number;
+    };
+    mastery: {
+        threshold_gold: number;
+        threshold_silver: number;
+        threshold_bronze: number;
+    };
+}
+
+// Types for data.ts
+export interface SimulationOption {
+    text: string;
+    correct: boolean;
+}
+
+export interface SimulationState {
     isShift: number;
     lmShift: number;
-    bpType: 'horizontal' | 'vertical' | 'flat' | 'steep';
-    animStage: number;
-    targetIS?: number;
-    targetLM?: number;
 }
+
+export interface SimulationStep {
+    question: string;
+    hint: string;
+    options: SimulationOption[];
+    targetState: SimulationState;
+}
+
+export interface DataSlide {
+    title: string;
+    html: string;
+    interactiveType?: string;
+}
+
+export interface DataQuestion {
+    topic: string;
+    question: string;
+    hint?: string;
+    type: string;
+    options?: { text: string; correct: boolean }[];
+    explanation?: string;
+    gapText?: string;
+    correctAnswer?: string;
+    svgPath?: string;
+    target?: { x: number; y: number; tolerance: number };
+    curveType?: string;
+    correctDirection?: string;
+}
+
+export interface DataModule {
+    id: string;
+    title: string;
+    description?: string;
+    status: string;
+    type: string;
+    xpReward?: number;
+    nextModule?: string;
+    slides?: DataSlide[];
+    questions: DataQuestion[];
+}
+
+export interface DataTrack {
+    id: string;
+    title: string;
+    subtitle?: string;
+    icon: string;
+    description: string;
+    modules: DataModule[];
+}
+
+export type Lessons = Record<string, DataTrack>;

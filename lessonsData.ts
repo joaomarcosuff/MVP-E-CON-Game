@@ -1,4 +1,6 @@
-{
+import { GameData } from './types';
+
+export const lessonsData: GameData = {
   "tracks": [
     {
       "id": "math",
@@ -119,4 +121,4 @@
       ]
     }
   ]
-}
+};

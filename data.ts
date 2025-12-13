@@ -194,6 +194,7 @@ export const lessons: Lessons = {
                         topic: "Conceito (Ceteris Paribus)",
                         question: "Sua felicidade (U) depende de Café (x) e Pão de Queijo (y). O que significa a Derivada Parcial em relação ao Café (∂U/∂x)?",
                         hint: "Imagine que a quantidade de Pão de Queijo está travada/fixa.",
+                        type: "multiple_choice",
                         options: [
                             { text: "Como a felicidade muda se eu aumentar o Café, mantendo o Pão de Queijo constante.", correct: true },
                             { text: "Como a felicidade muda se eu aumentar os dois ao mesmo tempo.", correct: false },
@@ -215,6 +216,7 @@ export const lessons: Lessons = {
                         topic: "Conceito (Juros)",
                         question: "Você tem uma poupança (y) que rende 10% ao ano. Como escrevemos o valor do ano seguinte (t+1) baseada no ano atual (t)?",
                         hint: "O novo valor é o valor antigo + 10% do antigo.",
+                        type: "multiple_choice",
                         options: [
                             { text: "y(t+1) = 1,10 · y(t)", correct: true },
                             { text: "y(t+1) = y(t) + 10", correct: false },
@@ -243,6 +245,7 @@ export const lessons: Lessons = {
                         topic: "1. Preferências (Concreto)",
                         question: "Imagine que você está na cantina. Você gosta tanto de Café (X) quanto de Pão de Queijo (Y). Se eu tirar 1 Pão de Queijo seu, quantos Cafés eu preciso te dar para você ficar IGUALMENTE feliz?",
                         hint: "Estamos buscando uma troca que mantenha sua satisfação constante. Isso é a base da 'Indiferença'.",
+                        type: "multiple_choice",
                         options: [
                             { text: "A quantidade exata que compensa a perda, mantendo a Utilidade constante.", correct: true },
                             { text: "O máximo de cafés que eu puder comprar com meu dinheiro.", correct: false },
@@ -271,6 +274,7 @@ export const lessons: Lessons = {
                         topic: "1. Identidades Contábeis",
                         question: "Em uma economia aberta, se a Poupança Nacional (Privada + Pública) for menor que o Investimento (S < I), o que deve ocorrer com o setor externo?",
                         hint: "Lembre-se da identidade S = I + CC. Se S é pouco para cobrir I, precisamos de poupança de quem?",
+                        type: "multiple_choice",
                         options: [
                             { text: "Haverá um Déficit em Transações Correntes (Poupança Externa positiva).", correct: true },
                             { text: "Haverá um Superávit em Transações Correntes.", correct: false },
