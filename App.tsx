@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
@@ -22,6 +23,10 @@ const App: React.FC = () => {
     const [qScore, setQScore] = useState(0);
     const [qFeedback, setQFeedback] = useState<{ isCorrect: boolean; text: string } | null>(null);
     const [qHintVisible, setQHintVisible] = useState(false);
+    
+    // Interactive Inputs State
+    const [textInput, setTextInput] = useState('');
+    const [sliderValue, setSliderValue] = useState(0);
 
     // Simulation State
     const [simSetup, setSimSetup] = useState({ regime: 'fixo', mobility: 'perfeita', policy: 'fiscal_exp' });
@@ -113,20 +118,58 @@ const App: React.FC = () => {
             setQScore(0);
             setQFeedback(null);
             setQHintVisible(false);
+            setTextInput('');
+            setSliderValue(0);
             setPhase('lesson');
         }
     };
 
-    const handleQuizAnswer = (option: Option, question: Question) => {
+    // --- GENERIC ANSWER HANDLER ---
+    const handleAnswerSubmit = (isCorrect: boolean, explanation: string) => {
         if (qFeedback) return;
 
-        if (option.correct) {
+        if (isCorrect) {
             setQScore(prev => prev + 1);
             updateCoins(50);
-            setQFeedback({ isCorrect: true, text: question.explanation });
+            setQFeedback({ isCorrect: true, text: explanation });
         } else {
-            setQFeedback({ isCorrect: false, text: `Explicação: ${question.explanation}` });
+            setQFeedback({ isCorrect: false, text: `Explicação: ${explanation}` });
         }
+    };
+
+    // MC Handler
+    const handleMCAnswer = (option: Option, question: Question) => {
+        handleAnswerSubmit(option.correct, question.explanation);
+    };
+
+    // Fill Gap Handler
+    const handleFillGapSubmit = (question: Question) => {
+        const correct = textInput.toLowerCase().trim() === (question.correctAnswer?.toLowerCase().trim() || "");
+        handleAnswerSubmit(correct, question.explanation);
+    };
+
+    // Graph Shift Handler
+    const handleGraphShiftSubmit = (question: Question) => {
+        // Assume right > 20, left < -20 on a -50 to 50 scale
+        let correct = false;
+        if (question.correctDirection === 'right') correct = sliderValue > 20;
+        else if (question.correctDirection === 'left') correct = sliderValue < -20;
+        
+        handleAnswerSubmit(correct, question.explanation);
+    };
+
+    // Graph Point Handler
+    const handleGraphPointClick = (e: React.MouseEvent<SVGSVGElement>, question: Question) => {
+        if (qFeedback || !question.target) return;
+        
+        const svg = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - svg.left;
+        const y = e.clientY - svg.top;
+        
+        const dist = Math.sqrt(Math.pow(x - question.target.x, 2) + Math.pow(y - question.target.y, 2));
+        const correct = dist <= question.target.tolerance;
+
+        handleAnswerSubmit(correct, correct ? question.explanation : "Tente novamente! Procure o ponto indicado.");
     };
 
     const nextQuizQuestion = () => {
@@ -134,6 +177,8 @@ const App: React.FC = () => {
             setQIndex(prev => prev + 1);
             setQFeedback(null);
             setQHintVisible(false);
+            setTextInput('');
+            setSliderValue(0);
         } else {
             setPhase('result');
         }
@@ -305,6 +350,122 @@ const App: React.FC = () => {
         );
     }
 
+    // --- Helper to Render Question Content ---
+    const renderQuestionContent = (q: Question) => {
+        // 1. Multiple Choice (Default)
+        if (!q.type || q.type === 'multiple_choice') {
+            return (
+                <div className="space-y-3 mt-6">
+                    {q.options?.map((opt, i) => (
+                        <button key={i} onClick={() => handleMCAnswer(opt, q)} disabled={!!qFeedback} className={`w-full p-4 rounded-xl border-2 text-left font-bold transition-all ${qFeedback ? (opt.correct ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-white border-slate-100 text-slate-400') : 'bg-white border-slate-100 hover:border-brand-primary text-slate-600'}`}>
+                            {opt.text}
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        // 2. Fill Gap
+        if (q.type === 'fill_gap' && q.gapText) {
+            const parts = q.gapText.split('{{gap}}');
+            return (
+                <div className="mt-8 flex flex-col items-center">
+                    <div className="text-xl font-medium leading-loose text-center mb-6">
+                        {parts[0]}
+                        <input 
+                            type="text" 
+                            disabled={!!qFeedback}
+                            value={textInput}
+                            onChange={(e) => setTextInput(e.target.value)}
+                            className={`mx-2 border-b-2 bg-indigo-50 text-center font-bold outline-none px-2 py-1 w-32 ${qFeedback ? (textInput.toLowerCase() === q.correctAnswer?.toLowerCase() ? 'border-emerald-500 text-emerald-600' : 'border-red-500 text-red-500') : 'border-slate-300 text-brand-primary'}`}
+                        />
+                        {parts[1]}
+                    </div>
+                    <button onClick={() => handleFillGapSubmit(q)} disabled={!!qFeedback || !textInput} className="bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-dark disabled:opacity-50">
+                        Verificar
+                    </button>
+                </div>
+            );
+        }
+
+        // 3. Graph Point (Click on SVG)
+        if (q.type === 'graph_point' && q.svgPath) {
+            return (
+                <div className="mt-6 flex flex-col items-center">
+                    <div className="relative border-2 border-slate-200 rounded-xl overflow-hidden bg-white cursor-crosshair shadow-sm hover:shadow-md transition-shadow">
+                        <svg width="300" height="300" onClick={(e) => handleGraphPointClick(e, q)}>
+                            {/* Grid/Axes */}
+                            <defs>
+                                <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                                    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grid)" />
+                            <line x1="20" y1="280" x2="280" y2="280" stroke="#64748b" strokeWidth="2" /> {/* X Axis */}
+                            <line x1="20" y1="20" x2="20" y2="280" stroke="#64748b" strokeWidth="2" />  {/* Y Axis */}
+                            
+                            {/* The Function Curve */}
+                            <path d={q.svgPath} fill="none" stroke="#2563eb" strokeWidth="4" />
+                            
+                            {/* Feedback Marker */}
+                            {qFeedback && q.target && (
+                                <circle cx={q.target.x} cy={q.target.y} r="8" fill={qFeedback.isCorrect ? "#10b981" : "#ef4444"} stroke="white" strokeWidth="2" />
+                            )}
+                        </svg>
+                        <div className="absolute top-2 right-2 bg-white/80 px-2 py-1 rounded text-xs text-slate-500">Clique no gráfico</div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 4. Graph Shift (Slider)
+        if (q.type === 'graph_shift') {
+            return (
+                <div className="mt-6 flex flex-col items-center w-full max-w-sm mx-auto">
+                    <svg width="300" height="300" className="border-2 border-slate-200 rounded-xl bg-white mb-6">
+                         <line x1="20" y1="280" x2="280" y2="280" stroke="#64748b" strokeWidth="2" /> 
+                         <line x1="20" y1="20" x2="20" y2="280" stroke="#64748b" strokeWidth="2" />
+                         
+                         {/* Static Curve (Reference) */}
+                         {q.curveType === 'supply' ? (
+                            <line x1="50" y1="250" x2="250" y2="50" stroke="#cbd5e1" strokeWidth="3" strokeDasharray="5,5" />
+                         ) : (
+                            <line x1="50" y1="50" x2="250" y2="250" stroke="#cbd5e1" strokeWidth="3" strokeDasharray="5,5" />
+                         )}
+
+                         {/* Dynamic Curve */}
+                         {q.curveType === 'supply' ? (
+                            <line x1={50 + sliderValue} y1="250" x2={250 + sliderValue} y2="50" stroke="#2563eb" strokeWidth="4" />
+                         ) : (
+                            <line x1={50 + sliderValue} y1="50" x2={250 + sliderValue} y2="250" stroke="#dc2626" strokeWidth="4" />
+                         )}
+                    </svg>
+                    
+                    <div className="w-full px-4">
+                        <input 
+                            type="range" min="-50" max="50" 
+                            value={sliderValue} 
+                            disabled={!!qFeedback}
+                            onChange={(e) => setSliderValue(Number(e.target.value))}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                        />
+                        <div className="flex justify-between text-xs font-bold text-slate-400 mt-2 uppercase">
+                            <span>Esquerda (Contração)</span>
+                            <span>Direita (Expansão)</span>
+                        </div>
+                    </div>
+                    
+                    <button onClick={() => handleGraphShiftSubmit(q)} disabled={!!qFeedback} className="mt-6 bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-dark">
+                        Confirmar Movimento
+                    </button>
+                </div>
+            );
+        }
+
+        return <div className="text-red-500">Tipo de questão desconhecido.</div>;
+    };
+
+
     // --- Main App ---
     return (
         <div className="flex flex-col min-h-screen w-full">
@@ -400,13 +561,10 @@ const App: React.FC = () => {
                             <div className="flex-grow">
                                 <span className="bg-indigo-50 text-brand-primary px-3 py-1 rounded-full text-xs font-bold uppercase">{activeModule.questions[qIndex].topic}</span>
                                 <h3 className="text-2xl font-bold text-slate-800 mt-4 mb-2">{activeModule.questions[qIndex].question}</h3>
-                                <div className="space-y-3 mt-6">
-                                    {activeModule.questions[qIndex].options.map((opt, i) => (
-                                        <button key={i} onClick={() => handleQuizAnswer(opt, activeModule.questions[qIndex])} disabled={!!qFeedback} className={`w-full p-4 rounded-xl border-2 text-left font-bold transition-all ${qFeedback ? (opt.correct ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-white border-slate-100 text-slate-400') : 'bg-white border-slate-100 hover:border-brand-primary text-slate-600'}`}>
-                                            {opt.text}
-                                        </button>
-                                    ))}
-                                </div>
+                                
+                                {/* DYNAMIC CONTENT RENDERER */}
+                                {renderQuestionContent(activeModule.questions[qIndex])}
+
                                 {qFeedback && (
                                     <div className={`mt-6 p-4 rounded-xl border-l-4 ${qFeedback.isCorrect ? 'bg-emerald-50 border-emerald-500' : 'bg-red-50 border-red-500'}`}>
                                         <p className="font-bold text-slate-800">{qFeedback.text}</p>

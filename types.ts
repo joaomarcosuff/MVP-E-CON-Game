@@ -1,3 +1,4 @@
+
 export interface PlayerData {
     nome: string;
     moedas: number;
@@ -5,12 +6,29 @@ export interface PlayerData {
     xp: number;
 }
 
+export type QuestionType = 'multiple_choice' | 'fill_gap' | 'graph_point' | 'graph_shift';
+
 export interface Question {
     topic: string;
-    question: string;
+    question: string; // Instrução principal
     hint: string;
-    options: Option[];
     explanation: string;
+    type?: QuestionType; // Opcional, default é multiple_choice
+    
+    // Múltipla Escolha
+    options?: Option[];
+
+    // Fill Gap
+    gapText?: string; // Texto com {{gap}}
+    correctAnswer?: string; // Resposta correta (string)
+
+    // Graph Point
+    svgPath?: string;
+    target?: { x: number; y: number; tolerance: number };
+
+    // Graph Shift
+    curveType?: 'supply' | 'demand';
+    correctDirection?: 'left' | 'right';
 }
 
 export interface Option {
