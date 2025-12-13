@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import katex from 'katex';
 import { Track, Module, Lesson, Question, PlayerProgress, GameData } from './types';
 import { lessonsData } from './lessonsData';
 import { progressionRules } from './progressionRules';
@@ -66,6 +67,42 @@ const XPDisplay: React.FC<{ xp: number }> = ({ xp }) => {
                 />
             </div>
         </div>
+    );
+};
+
+// --- LATEX RENDERER ---
+
+const LatexText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
+    // Splits by $$...$$ (block) or $...$ (inline)
+    // The regex captures the delimiters to help identify parts
+    const parts = text.split(/(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)/g);
+
+    return (
+        <span className={className}>
+            {parts.map((part, index) => {
+                if (part.startsWith('$$') && part.endsWith('$$')) {
+                    // Block math
+                    const content = part.slice(2, -2);
+                    try {
+                        const html = katex.renderToString(content, { displayMode: true, throwOnError: false });
+                        return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
+                    } catch (e) {
+                        return <span key={index}>{part}</span>;
+                    }
+                } else if (part.startsWith('$') && part.endsWith('$')) {
+                    // Inline math
+                    const content = part.slice(1, -1);
+                    try {
+                        const html = katex.renderToString(content, { displayMode: false, throwOnError: false });
+                        return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
+                    } catch (e) {
+                        return <span key={index}>{part}</span>;
+                    }
+                }
+                // Plain text
+                return <span key={index}>{part}</span>;
+            })}
+        </span>
     );
 };
 
@@ -152,18 +189,7 @@ const QuizView: React.FC<{
             setQIndex(prev => prev + 1);
         } else {
             // Lesson Finished
-            // Calculate Accuracy
-            // Note: feedback logic above ensures user moves to next question after attempt, 
-            // so correctCount is accurate for "First Try" accuracy.
-            const accuracy = (correctCount + (feedback?.correct ? 0 : 0)) / lesson.questions.length; // Add last feedback state if it was the last question
-            
-            // Re-calculate correctness for the very last question since state update might lag or we are in the handler
-            // Actually, correctCount updates before this, but let's be safe.
-            // Simplified: If the current feedback is correct, correctCount has already been incremented.
-            
             const finalCorrectCount = correctCount; // + (feedback?.correct ? 0 : 0); 
-            // Wait, setCorrectCount is async. But inside the event handler of "Continuar", 
-            // if we clicked verify, state updated. Then we click continue. So correctCount is up to date.
             
             const finalAccuracy = finalCorrectCount / lesson.questions.length;
             const success = finalAccuracy >= progressionRules.unlock_logic.min_accuracy_to_unlock;
@@ -198,7 +224,7 @@ const QuizView: React.FC<{
                 {/* Content */}
                 <div className="p-8 overflow-y-auto flex-grow flex flex-col items-center justify-center">
                     <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center mb-8 leading-relaxed">
-                        {question.prompt}
+                        <LatexText text={question.prompt} />
                     </h2>
 
                     {question.type === 'multiple_choice' && question.options && (
@@ -220,7 +246,7 @@ const QuizView: React.FC<{
                                         }
                                     `}
                                 >
-                                    {opt}
+                                    <LatexText text={opt} />
                                 </button>
                             ))}
                         </div>
@@ -262,7 +288,9 @@ const QuizView: React.FC<{
                                 </h3>
                             </div>
                         </div>
-                        <p className={`mb-4 ${feedback.correct ? 'text-emerald-600' : 'text-red-600'}`}>{feedback.text}</p>
+                        <p className={`mb-4 ${feedback.correct ? 'text-emerald-600' : 'text-red-600'}`}>
+                            <LatexText text={feedback.text} />
+                        </p>
                         <button 
                             onClick={handleNext}
                             className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-1 ${feedback.correct ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'}`}
