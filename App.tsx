@@ -1,9 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import katex from 'katex';
-import { Track, Module, Lesson, Question, PlayerProgress, GameData } from './types';
+import { Track, Module, Lesson, Question, PlayerProgress } from './types';
 import { lessonsData } from './lessonsData';
 import { progressionRules } from './progressionRules';
+
+// --- TYPES FOR VIEW STATE ---
+type ViewState = 'HOME' | 'TRACKS' | 'LEVELS' | 'LESSONS' | 'QUIZ';
 
 // --- MOCK AUTH FOR MVP (Local Storage) ---
 const usePlayerProgress = () => {
@@ -26,136 +29,54 @@ const usePlayerProgress = () => {
     return [progress, setProgress] as const;
 };
 
-// --- COMPONENTS ---
-
-const ProgressBar: React.FC<{ current: number; total: number }> = ({ current, total }) => {
-    const width = Math.min(100, (current / total) * 100);
-    return (
-        <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
-            <div 
-                className="h-full bg-brand-success transition-all duration-500 ease-out"
-                style={{ width: `${width}%` }}
-            />
-        </div>
-    );
-};
-
-const HeartDisplay: React.FC<{ hearts: number }> = ({ hearts }) => (
-    <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
-        <span className="text-red-500 text-xl">❤️</span>
-        <span className="font-bold text-slate-700">{hearts}</span>
-    </div>
-);
-
-const XPDisplay: React.FC<{ xp: number }> = ({ xp }) => {
-    // Visual level progress (e.g., every 100 XP fills the bar)
-    const levelProgress = xp % 100;
-    
-    return (
-        <div className="flex flex-col w-28">
-             <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
-                <div className="flex items-center gap-1">
-                    <span className="text-amber-500 text-base">⚡</span>
-                    <span className="text-slate-700 text-sm">{xp}</span>
-                </div>
-                <span className="text-[10px] uppercase opacity-70">Nível {Math.floor(xp / 100) + 1}</span>
-             </div>
-             <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-slate-100">
-                <div 
-                    className="h-full bg-amber-400 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(251,191,36,0.5)]"
-                    style={{ width: `${levelProgress}%` }}
-                />
-            </div>
-        </div>
-    );
-};
-
-// --- LATEX RENDERER ---
+// --- HELPERS ---
 
 const LatexText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
-    // Splits by $$...$$ (block) or $...$ (inline)
-    // The regex captures the delimiters to help identify parts
+    if (!text) return null;
     const parts = text.split(/(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)/g);
 
     return (
         <span className={className}>
             {parts.map((part, index) => {
                 if (part.startsWith('$$') && part.endsWith('$$')) {
-                    // Block math
                     const content = part.slice(2, -2);
                     try {
                         const html = katex.renderToString(content, { displayMode: true, throwOnError: false });
                         return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
-                    } catch (e) {
-                        return <span key={index}>{part}</span>;
-                    }
+                    } catch (e) { return <span key={index}>{part}</span>; }
                 } else if (part.startsWith('$') && part.endsWith('$')) {
-                    // Inline math
                     const content = part.slice(1, -1);
                     try {
                         const html = katex.renderToString(content, { displayMode: false, throwOnError: false });
                         return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
-                    } catch (e) {
-                        return <span key={index}>{part}</span>;
-                    }
+                    } catch (e) { return <span key={index}>{part}</span>; }
                 }
-                // Plain text
                 return <span key={index}>{part}</span>;
             })}
         </span>
     );
 };
 
-// --- MAP COMPONENTS ---
+// --- COMPONENTS ---
 
-const LessonNode: React.FC<{ 
-    lesson: Lesson; 
-    status: 'locked' | 'active' | 'completed'; 
-    onClick: () => void 
-}> = ({ lesson, status, onClick }) => {
-    // Visual styles based on status
-    const styles = {
-        locked: "bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed",
-        active: "bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/40 scale-110 ring-4 ring-indigo-100 animate-pulse",
-        completed: "bg-emerald-500 border-emerald-600 text-white shadow-md shadow-emerald-500/20"
-    };
-
-    const icon = {
-        locked: "🔒",
-        active: "▶",
-        completed: "✔"
-    };
-
-    return (
-        <div className="flex flex-col items-center group relative z-10">
-            {/* The Node Circle */}
-            <button 
-                onClick={onClick}
-                disabled={status === 'locked'}
-                className={`
-                    w-16 h-16 rounded-full border-b-4 flex items-center justify-center text-2xl font-bold
-                    transition-all duration-200 transform
-                    ${styles[status]}
-                    ${status !== 'locked' ? 'hover:scale-110 active:scale-95' : ''}
-                `}
-            >
-                {icon[status]}
-            </button>
-            
-            {/* Floating Label (Tooltip-ish) */}
-            <div className={`
-                absolute top-20 w-48 text-center p-2 rounded-xl bg-white border-2 border-slate-100 shadow-xl
-                transition-all duration-200 z-20 pointer-events-none
-                ${status === 'locked' ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}
-            `}>
-                <h4 className="font-bold text-slate-800 text-sm leading-tight">{lesson.title}</h4>
-                {status === 'active' && (
-                    <div className="text-xs text-brand-primary font-bold mt-1">COMEÇAR</div>
-                )}
-            </div>
+const HeaderStats: React.FC<{ progress: PlayerProgress }> = ({ progress }) => (
+    <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
+            <span className="text-red-500 text-xl">❤️</span>
+            <span className="font-bold text-slate-700">{progress.hearts}</span>
         </div>
-    );
-};
+        <div className="flex items-center gap-1 bg-orange-100/50 px-3 py-1 rounded-full border border-orange-200">
+            <span className="text-xl">🔥</span>
+            <span className="font-bold text-orange-700">{progress.streak}</span>
+        </div>
+        <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
+            <span className="text-amber-500 text-xl">⚡</span>
+            <span className="font-bold text-slate-700">{progress.xp}</span>
+        </div>
+    </div>
+);
+
+// --- QUIZ COMPONENT ---
 
 const QuizView: React.FC<{
     lesson: Lesson;
@@ -170,16 +91,56 @@ const QuizView: React.FC<{
     const question = lesson.questions[qIndex];
 
     const handleSubmit = (ans: string) => {
-        const isCorrect = ans.trim().toLowerCase() === question.answer.toLowerCase();
-        
+        let isCorrect = false;
+
+        // Normalization for text/numeric comparison
+        const normalize = (s: string) => s.trim().toLowerCase().replace(',', '.');
+        const userAns = normalize(ans);
+        const correctAns = normalize(question.answer);
+
+        if (question.type === 'numeric' || question.type === 'fill_gap' || question.type === 'input') {
+             isCorrect = userAns === correctAns;
+        } else if (question.type === 'multiple_choice') {
+             isCorrect = userAns === correctAns;
+        } else if (question.type === 'graph_point') {
+             // Handled by handleGraphClick, this block might be redundant for that type but safe
+             isCorrect = ans === 'correct'; 
+        }
+
         if (isCorrect) setCorrectCount(prev => prev + 1);
 
         setFeedback({
             correct: isCorrect,
             text: isCorrect 
-                ? (question.feedback || "✅ Correto! Mandou bem.") 
+                ? (question.feedback || "✅ Correto!") 
                 : `❌ Tente novamente. A resposta era: ${question.answer}`
         });
+    };
+
+    const handleGraphClick = (e: React.MouseEvent<SVGSVGElement>) => {
+        if (feedback) return;
+        if (!question.target) return;
+
+        const svg = e.currentTarget;
+        const rect = svg.getBoundingClientRect();
+        // Calculate click position relative to SVG 300x300 viewBox
+        const x = ((e.clientX - rect.left) / rect.width) * 300;
+        const y = ((e.clientY - rect.top) / rect.height) * 300;
+
+        const dx = Math.abs(x - question.target.x);
+        const dy = Math.abs(y - question.target.y);
+        
+        // Tolerance check
+        const isHit = dx < question.target.tolerance && dy < question.target.tolerance;
+        
+        if (isHit) {
+            handleSubmit("correct"); // Special keyword for graph success
+        } else {
+            setFeedback({
+                correct: false,
+                text: question.explanation || "❌ Tente novamente. Clique na área indicada."
+            });
+        }
     };
 
     const handleNext = () => {
@@ -188,312 +149,382 @@ const QuizView: React.FC<{
         if (qIndex < lesson.questions.length - 1) {
             setQIndex(prev => prev + 1);
         } else {
-            // Lesson Finished
-            const finalCorrectCount = correctCount; // + (feedback?.correct ? 0 : 0); 
-            
-            const finalAccuracy = finalCorrectCount / lesson.questions.length;
-            const success = finalAccuracy >= progressionRules.unlock_logic.min_accuracy_to_unlock;
-            
+            // Finish
+            const success = (correctCount / lesson.questions.length) >= progressionRules.unlock_logic.min_accuracy_to_unlock;
             let xp = 0;
             if (success) {
-                // Base XP logic
-                xp = lesson.questions.length * progressionRules.xp_system.base_xp_per_question;
-                xp += progressionRules.xp_system.lesson_completion_bonus;
-                
-                // Perfect Bonus
-                if (finalCorrectCount === lesson.questions.length) {
-                    xp += progressionRules.xp_system.perfect_lesson_bonus;
-                }
+                xp = lesson.xp;
             }
             onComplete(xp, success);
         }
     };
 
-    return (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                {/* Header */}
-                <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                    <button onClick={onExit} className="text-slate-400 hover:text-red-500 font-bold transition-colors">✕</button>
-                    <div className="w-1/2">
-                        <ProgressBar current={qIndex + (feedback ? 1 : 0)} total={lesson.questions.length} />
-                    </div>
-                    <div className="text-slate-400 font-bold text-sm">XP Potencial: {lesson.xp}</div>
-                </div>
+    // --- RENDER QUESTION TYPES ---
 
-                {/* Content */}
-                <div className="p-8 overflow-y-auto flex-grow flex flex-col items-center justify-center">
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center mb-8 leading-relaxed">
-                        <LatexText text={question.prompt} />
-                    </h2>
-
-                    {question.type === 'multiple_choice' && question.options && (
-                        <div className="grid grid-cols-1 gap-3 w-full">
-                            {question.options.map((opt, i) => (
-                                <button
-                                    key={i}
-                                    disabled={!!feedback}
-                                    onClick={() => handleSubmit(opt)}
-                                    className={`
-                                        p-4 rounded-xl border-b-4 font-bold text-left transition-all
-                                        ${feedback 
-                                            ? (opt === question.answer 
-                                                ? 'bg-emerald-100 border-emerald-500 text-emerald-900' 
-                                                : opt === inputVal // if this was the wrong selection
-                                                    ? 'bg-red-100 border-red-500 text-red-900'
-                                                    : 'bg-slate-50 border-slate-100 opacity-50')
-                                            : 'bg-white border-slate-200 hover:border-brand-primary hover:bg-indigo-50 text-slate-700 active:border-b-0 active:translate-y-1'
-                                        }
-                                    `}
-                                >
-                                    <LatexText text={opt} />
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {question.type === 'input' && (
-                        <div className="w-full flex flex-col gap-4">
-                            <input
-                                type="text"
-                                value={inputVal}
-                                onChange={(e) => setInputVal(e.target.value)}
-                                disabled={!!feedback}
-                                placeholder="Digite sua resposta..."
-                                className="w-full p-4 text-lg border-2 border-slate-300 rounded-xl focus:border-brand-primary outline-none font-bold text-center"
-                            />
-                            {!feedback && (
-                                <button 
-                                    onClick={() => handleSubmit(inputVal)}
-                                    disabled={!inputVal}
-                                    className="bg-brand-primary text-white py-3 rounded-xl font-bold hover:bg-brand-dark disabled:opacity-50 transition-colors"
-                                >
-                                    Verificar
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer / Feedback */}
-                {feedback && (
-                    <div className={`p-6 border-t-2 animate-slide-up ${feedback.correct ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${feedback.correct ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                                    {feedback.correct ? '✓' : '✕'}
-                                </div>
-                                <h3 className={`font-bold text-lg ${feedback.correct ? 'text-emerald-700' : 'text-red-700'}`}>
-                                    {feedback.correct ? 'Correto!' : 'Incorreto'}
-                                </h3>
+    const renderContent = () => {
+        // 1. Graph Point Question
+        if (question.type === 'graph_point') {
+            return (
+                <div className="flex flex-col items-center w-full">
+                    <p className="mb-4 text-center font-bold text-slate-700">{question.instruction}</p>
+                    <div className="relative w-full max-w-sm aspect-square bg-white border-2 border-slate-200 rounded-xl shadow-inner cursor-crosshair overflow-hidden">
+                        <svg viewBox="0 0 300 300" className="w-full h-full" onClick={handleGraphClick}>
+                             <defs>
+                                <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                                    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grid)" />
+                            {/* Axes */}
+                            <line x1="10" y1="280" x2="290" y2="280" stroke="#94a3b8" strokeWidth="2" />
+                            <line x1="20" y1="290" x2="20" y2="10" stroke="#94a3b8" strokeWidth="2" />
+                            {/* The Curve */}
+                            <path d={question.svgPath} fill="none" stroke="#4338ca" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                        {feedback && (
+                            <div 
+                                className={`absolute w-8 h-8 rounded-full border-2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center
+                                ${feedback.correct ? 'border-emerald-500 bg-emerald-100' : 'border-red-500 bg-red-100'}`}
+                                style={{ left: `${(question.target!.x / 300)*100}%`, top: `${(question.target!.y / 300)*100}%` }}
+                            >
+                                {feedback.correct ? '✓' : '✕'}
                             </div>
-                        </div>
-                        <p className={`mb-4 ${feedback.correct ? 'text-emerald-600' : 'text-red-600'}`}>
-                            <LatexText text={feedback.text} />
-                        </p>
-                        <button 
-                            onClick={handleNext}
-                            className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-1 ${feedback.correct ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'}`}
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // 2. Fill Gap
+        if (question.type === 'fill_gap') {
+             const parts = question.text?.split('{{gap}}') || ["", ""];
+             return (
+                 <div className="text-xl leading-loose text-center font-medium text-slate-700">
+                     <span>{parts[0]}</span>
+                     <input 
+                        type="text" 
+                        value={inputVal}
+                        onChange={(e) => setInputVal(e.target.value)}
+                        disabled={!!feedback}
+                        className="mx-2 px-2 py-1 border-b-2 border-brand-primary w-32 text-center font-bold outline-none bg-slate-50 focus:bg-white"
+                        placeholder="?"
+                     />
+                     <span>{parts[1]}</span>
+                     {!feedback && (
+                        <button onClick={() => handleSubmit(inputVal)} className="block mx-auto mt-6 bg-brand-primary text-white px-6 py-2 rounded-full font-bold">Verificar</button>
+                     )}
+                 </div>
+             );
+        }
+
+        // 3. Numeric / Input
+        if (question.type === 'numeric' || question.type === 'input') {
+            return (
+                <div className="w-full max-w-sm">
+                    {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={inputVal}
+                            onChange={(e) => setInputVal(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && !feedback && inputVal && handleSubmit(inputVal)}
+                            disabled={!!feedback}
+                            placeholder="Sua resposta..."
+                            className="flex-1 p-4 border-2 border-slate-300 rounded-xl font-bold text-center outline-none focus:border-brand-primary"
+                        />
+                        {!feedback && (
+                            <button 
+                                onClick={() => handleSubmit(inputVal)}
+                                disabled={!inputVal}
+                                className="bg-brand-primary text-white px-6 rounded-xl font-bold hover:bg-brand-dark"
+                            >
+                                OK
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // 4. Multiple Choice (Default)
+        return (
+            <div className="w-full">
+                {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
+                <div className="grid gap-3">
+                    {question.options?.map((opt, i) => (
+                        <button
+                            key={i}
+                            disabled={!!feedback}
+                            onClick={() => handleSubmit(opt)}
+                            className={`p-4 rounded-xl border-2 font-bold text-left transition-all ${
+                                feedback 
+                                    ? opt.toLowerCase() === question.answer.toLowerCase() 
+                                        ? 'bg-emerald-100 border-emerald-500 text-emerald-800'
+                                        : 'bg-slate-50 border-slate-200 opacity-50'
+                                    : 'bg-white border-slate-200 hover:border-brand-primary hover:bg-indigo-50'
+                            }`}
                         >
-                            Continuar
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+                    <button onClick={onExit} className="text-slate-400 font-bold hover:text-red-500">✕ SAIR</button>
+                    <div className="text-sm font-bold text-slate-400">Questão {qIndex + 1} de {lesson.questions.length}</div>
+                </div>
+                
+                <div className="p-8 flex-grow overflow-y-auto flex flex-col items-center justify-center">
+                    {question.prompt && <h2 className="text-xl font-bold text-slate-800 text-center mb-6"><LatexText text={question.prompt} /></h2>}
+                    {renderContent()}
+                </div>
+
+                {feedback && (
+                    <div className={`p-6 border-t-2 ${feedback.correct ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                        <div className="font-bold text-lg mb-2 flex items-center gap-2">
+                            <span>{feedback.correct ? '✅' : '❌'}</span>
+                            <span className={feedback.correct ? 'text-emerald-700' : 'text-red-700'}>
+                                {feedback.correct ? 'Correto!' : 'Incorreto'}
+                            </span>
+                        </div>
+                        <p className="text-slate-600 mb-4 text-sm"><LatexText text={feedback.text} /></p>
+                        <button onClick={handleNext} className={`w-full py-3 rounded-xl font-bold text-white ${feedback.correct ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                            CONTINUAR
                         </button>
                     </div>
                 )}
             </div>
         </div>
     );
-}
+};
+
+// --- MAIN APP ---
 
 export default function App() {
     const [progress, setProgress] = usePlayerProgress();
-    const [activeTrack, setActiveTrack] = useState<Track | null>(null);
+    
+    // NAVIGATION STATE
+    const [view, setView] = useState<ViewState>('HOME');
+    const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null); // Equivalent to "Level"
     const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
 
-    // Load initial track
-    useEffect(() => {
-        if (!activeTrack && lessonsData.tracks.length > 0) {
-            setActiveTrack(lessonsData.tracks[0]);
-        }
-    }, [activeTrack]);
+    // Derived State Helpers
+    const getTrack = () => lessonsData.tracks.find(t => t.id === selectedTrackId);
+    const getModule = () => getTrack()?.modules.find(m => m.id === selectedModuleId);
+
+    // --- LOGIC ---
 
     const handleLessonComplete = (xpEarned: number, success: boolean) => {
         if (success && activeLesson) {
              setProgress(prev => {
-                 // Rule: Never reward twice the same lesson.
                  const isReplay = prev.completedLessons.includes(activeLesson.id);
-                 const finalXp = isReplay ? 0 : xpEarned;
-
                  return {
                      ...prev,
-                     xp: prev.xp + finalXp,
-                     completedLessons: isReplay 
-                        ? prev.completedLessons 
-                        : [...prev.completedLessons, activeLesson.id],
+                     xp: prev.xp + (isReplay ? 0 : xpEarned),
+                     completedLessons: isReplay ? prev.completedLessons : [...prev.completedLessons, activeLesson.id],
                      streak: prev.streak + 1
                  };
              });
         } else {
-             // Reset streak on failure
-             setProgress(prev => ({
-                ...prev,
-                hearts: Math.max(0, prev.hearts - 1),
-                streak: 0
-             }));
+             setProgress(prev => ({ ...prev, hearts: Math.max(0, prev.hearts - 1), streak: 0 }));
         }
         setActiveLesson(null);
+        // Return to lesson list
+        setView('LESSONS');
     };
 
-    // --- GAME LOGIC FOR MAP ---
+    // --- VIEWS ---
 
-    // Logic: A lesson is locked if the previous lesson IN THE SAME TRACK is not completed.
-    // If it is the first lesson of the track, it is unlocked.
-    const getLessonStatus = (lessonId: string, trackLessons: Lesson[]): 'locked' | 'active' | 'completed' => {
-        if (progress.completedLessons.includes(lessonId)) {
-            return 'completed';
-        }
+    const renderHome = () => (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
+            <div className="w-24 h-24 bg-brand-primary rounded-3xl flex items-center justify-center text-white text-5xl font-black mb-6 shadow-2xl transform -rotate-6">
+                E
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight">
+                ECONO<span className="text-amber-400">QUEST</span>
+            </h1>
+            <p className="text-indigo-200 text-lg mb-12 max-w-md">
+                Domine a economia real através de missões gamificadas.
+            </p>
+            
+            <button 
+                onClick={() => setView('TRACKS')}
+                className="bg-brand-success text-white px-12 py-4 rounded-2xl font-black text-xl shadow-lg shadow-emerald-900/20 hover:scale-105 transition-transform active:scale-95"
+            >
+                COMEÇAR JORNADA
+            </button>
+        </div>
+    );
 
-        const index = trackLessons.findIndex(l => l.id === lessonId);
-        
-        // If first lesson of track, and not completed, it is active
-        if (index === 0) return 'active';
+    const renderTracks = () => (
+        <div className="max-w-4xl mx-auto p-6">
+            <h2 className="text-white text-2xl font-bold mb-6 text-center">Escolha sua Trilha</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+                {lessonsData.tracks.map(track => (
+                    <button
+                        key={track.id}
+                        onClick={() => {
+                            setSelectedTrackId(track.id);
+                            setView('LEVELS');
+                        }}
+                        className="bg-white p-6 rounded-3xl shadow-xl hover:-translate-y-2 transition-transform text-left group border-b-8 border-slate-200 active:border-b-0 active:translate-y-0"
+                    >
+                        <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">{track.icon}</div>
+                        <h3 className="text-xl font-black text-slate-800 mb-2">{track.title}</h3>
+                        <p className="text-slate-500 text-sm">{track.description}</p>
+                    </button>
+                ))}
+            </div>
+            <button onClick={() => setView('HOME')} className="mt-8 text-white/50 font-bold hover:text-white block mx-auto">← VOLTAR</button>
+        </div>
+    );
 
-        // Check previous lesson
-        const prevLessonId = trackLessons[index - 1].id;
-        if (progress.completedLessons.includes(prevLessonId)) {
-            return 'active';
-        }
+    const renderLevels = () => {
+        const track = getTrack();
+        if (!track) return null;
 
-        return 'locked';
+        return (
+            <div className="max-w-2xl mx-auto p-6">
+                <div className="flex items-center gap-4 mb-8 text-white">
+                     <button onClick={() => setView('TRACKS')} className="opacity-50 hover:opacity-100 font-bold">← TRILHAS</button>
+                     <h2 className="text-2xl font-bold flex-1 text-center">{track.title}</h2>
+                     <div className="w-16"></div> {/* Spacer */}
+                </div>
+
+                <div className="space-y-4">
+                    {track.modules.map((mod, index) => {
+                        // Logic: Level is unlocked if previous level is complete? 
+                        // Simplified MVP logic: Level 1 always unlocked. Level 2 unlocked if Level 1 has 5 completed lessons (arbitrary check based on curriculum).
+                        // Better logic: Check if all lessons of previous module are in completedLessons.
+                        
+                        let isUnlocked = true;
+                        if (index > 0) {
+                            const prevModule = track.modules[index - 1];
+                            const allPrevComplete = prevModule.lessons.every(l => progress.completedLessons.includes(l.id));
+                            isUnlocked = allPrevComplete;
+                        }
+
+                        // Force Level 1 unlock
+                        if (index === 0) isUnlocked = true;
+
+                        return (
+                            <button
+                                key={mod.id}
+                                disabled={!isUnlocked}
+                                onClick={() => {
+                                    setSelectedModuleId(mod.id);
+                                    setView('LESSONS');
+                                }}
+                                className={`w-full p-6 rounded-2xl flex items-center justify-between transition-all ${
+                                    isUnlocked 
+                                        ? 'bg-white text-slate-800 shadow-lg hover:bg-indigo-50 cursor-pointer' 
+                                        : 'bg-slate-800/50 text-slate-500 border-2 border-slate-700 cursor-not-allowed'
+                                }`}
+                            >
+                                <div className="text-left">
+                                    <h3 className="font-black text-lg">{mod.title}</h3>
+                                    <p className="text-sm opacity-70">{mod.description}</p>
+                                </div>
+                                <div className="text-2xl">
+                                    {isUnlocked ? '➔' : '🔒'}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
     };
 
-    if (!activeTrack) return <div className="flex h-screen items-center justify-center">Carregando mapa...</div>;
+    const renderLessonList = () => {
+        const mod = getModule();
+        if (!mod) return null;
+
+        return (
+            <div className="max-w-2xl mx-auto p-6 pb-20">
+                <div className="flex items-center gap-4 mb-8 text-white">
+                     <button onClick={() => setView('LEVELS')} className="opacity-50 hover:opacity-100 font-bold">← NÍVEIS</button>
+                     <h2 className="text-xl font-bold flex-1 text-center">{mod.title}</h2>
+                     <div className="w-16"></div> 
+                </div>
+
+                <div className="flex flex-col items-center gap-6">
+                    {mod.lessons.map((lesson, idx) => {
+                        const isCompleted = progress.completedLessons.includes(lesson.id);
+                        // Is unlocked if it's the first one OR previous one is completed
+                        const isUnlocked = idx === 0 || progress.completedLessons.includes(mod.lessons[idx - 1].id);
+                        
+                        return (
+                            <div key={lesson.id} className="relative flex flex-col items-center group">
+                                {/* Connector Line */}
+                                {idx > 0 && <div className={`w-2 h-8 bg-slate-700 -mt-2 -mb-2 z-0`} />}
+                                
+                                <button
+                                    disabled={!isUnlocked}
+                                    onClick={() => setActiveLesson(lesson)}
+                                    className={`
+                                        w-20 h-20 rounded-full border-b-8 flex items-center justify-center text-3xl z-10 transition-transform
+                                        ${isCompleted 
+                                            ? 'bg-emerald-500 border-emerald-700 text-white' 
+                                            : isUnlocked 
+                                                ? 'bg-brand-primary border-indigo-800 text-white hover:scale-110 active:scale-95' 
+                                                : 'bg-slate-700 border-slate-800 text-slate-500 cursor-not-allowed'}
+                                    `}
+                                >
+                                    {isCompleted ? '✔' : isUnlocked ? '★' : '🔒'}
+                                </button>
+                                
+                                {/* Floating Label */}
+                                <div className={`mt-2 bg-white px-3 py-1 rounded-lg text-sm font-bold shadow-md transition-opacity ${isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
+                                    {lesson.title}
+                                </div>
+                            </div>
+                        );
+                    })}
+                    
+                    <div className="w-24 mt-8 text-center text-white/50 text-sm font-bold">
+                        🏆<br/>Final do Nível
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-slate-800 font-sans pb-20">
-            {/* Header */}
-            <header className="sticky top-0 z-30 w-full p-4">
-                <div className="max-w-5xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-3 flex justify-between items-center">
-                   <div className="flex items-center gap-2">
-                       <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg transform -rotate-3">E</div>
-                       <span className="hidden md:inline font-bold text-slate-700 tracking-tight">ECONOQUEST</span>
-                   </div>
-                   
-                   <div className="flex gap-4 md:gap-8 items-center">
-                       <HeartDisplay hearts={progress.hearts} />
-                       
-                       <div className="flex items-center gap-1 px-3 py-2 bg-orange-100/50 rounded-xl border border-orange-200">
-                           <span className="text-xl">🔥</span>
-                           <span className="font-bold text-orange-700">{progress.streak}</span>
-                       </div>
-
-                       <XPDisplay xp={progress.xp} />
-                   </div>
-                </div>
-            </header>
-
-            <main className="max-w-5xl mx-auto p-4 flex flex-col md:flex-row gap-6">
-                
-                {/* Sidebar / Track Selector */}
-                <aside className="w-full md:w-64 flex-shrink-0 space-y-4">
-                    <h3 className="text-slate-400 font-bold uppercase text-xs tracking-wider ml-2">Suas Trilhas</h3>
-                    {lessonsData.tracks.map(track => (
-                        <button 
-                            key={track.id}
-                            onClick={() => setActiveTrack(track)}
-                            className={`
-                                w-full p-4 rounded-2xl flex items-center gap-4 transition-all duration-200 border-2
-                                ${activeTrack.id === track.id 
-                                    ? 'bg-brand-primary border-brand-primary text-white shadow-lg scale-105' 
-                                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:border-slate-600'
-                                }
-                            `}
-                        >
-                            <span className="text-2xl">{track.icon}</span>
-                            <div className="text-left leading-tight">
-                                <div className="font-bold">{track.title}</div>
-                            </div>
-                        </button>
-                    ))}
-                    
-                    <div className="bg-slate-800 rounded-2xl p-6 mt-8 border border-slate-700">
-                        <h4 className="text-white font-bold mb-2">Liga Bronze</h4>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-yellow-500 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs">1</div>
-                            <div className="text-slate-300 text-sm">João (Você)</div>
-                            <div className="ml-auto text-brand-accent font-bold">{progress.xp} XP</div>
+        <div className="min-h-screen bg-slate-900 font-sans selection:bg-brand-primary selection:text-white">
+            {/* GLOBAL HEADER (Except on Home) */}
+            {view !== 'HOME' && view !== 'QUIZ' && (
+                <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur border-b border-white/10 p-4">
+                    <div className="max-w-5xl mx-auto flex justify-between items-center">
+                        <div className="font-black text-white text-xl tracking-tight cursor-pointer" onClick={() => setView('HOME')}>
+                            ECONO<span className="text-amber-400">QUEST</span>
                         </div>
-                        <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-yellow-500 w-3/4"></div>
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Main Content: The Gamified Map */}
-                <div className="flex-grow">
-                    {/* Track Intro Header */}
-                    <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden mb-10">
-                        <div className="relative z-10">
-                            <h2 className="text-3xl font-black mb-2">{activeTrack.title}</h2>
-                            <p className="opacity-80 max-w-lg text-indigo-100">{activeTrack.description}</p>
-                        </div>
-                        <div className="absolute right-0 bottom-0 opacity-20 text-9xl transform translate-x-10 translate-y-10 filter blur-sm">
-                            {activeTrack.icon}
-                        </div>
-                    </div>
-
-                    {/* The Path */}
-                    <div className="flex flex-col items-center space-y-4 pb-20">
-                        {activeTrack.modules.map((module) => (
-                            <div key={module.id} className="w-full flex flex-col items-center">
-                                {/* Module Header */}
-                                <div className="mb-8 mt-4 text-center">
-                                    <h3 className="text-slate-400 font-bold uppercase tracking-widest text-sm mb-1">{module.title}</h3>
-                                    <div className="h-1 w-12 bg-slate-700 mx-auto rounded-full"></div>
-                                </div>
-
-                                {/* Lessons in this module */}
-                                <div className="flex flex-col items-center">
-                                    {module.lessons.map((lesson, index) => {
-                                        // Calculate status for this specific track context
-                                        const trackFlatLessons = activeTrack.modules.flatMap(m => m.lessons);
-                                        const status = getLessonStatus(lesson.id, trackFlatLessons);
-                                        
-                                        return (
-                                            <React.Fragment key={lesson.id}>
-                                                {/* Connector Line (if not first item in this visual block) */}
-                                                {(index > 0 || activeTrack.modules.indexOf(module) > 0) && (
-                                                     <div className={`w-2 h-12 mb-2 rounded-full ${status === 'locked' ? 'bg-slate-700' : 'bg-brand-primary/50'}`}></div>
-                                                )}
-                                                
-                                                <LessonNode 
-                                                    lesson={lesson} 
-                                                    status={status}
-                                                    onClick={() => setActiveLesson(lesson)}
-                                                />
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </div>
-                                
-                                {/* Connector between modules */}
-                                <div className="w-2 h-12 mt-2 rounded-full bg-slate-700"></div>
-                            </div>
-                        ))}
-                         
-                         <div className="mt-8 text-slate-500 font-bold flex flex-col items-center gap-2">
-                             <div className="text-3xl">🏆</div>
-                             <p>Final da Trilha</p>
-                         </div>
+                        <HeaderStats progress={progress} />
                     </div>
                 </div>
+            )}
+
+            {/* MAIN CONTENT AREA */}
+            <main className="animate-fade-in">
+                {view === 'HOME' && renderHome()}
+                {view === 'TRACKS' && renderTracks()}
+                {view === 'LEVELS' && renderLevels()}
+                {view === 'LESSONS' && renderLessonList()}
             </main>
 
-            {/* Quiz Modal */}
+            {/* QUIZ MODAL OVERLAY */}
             {activeLesson && (
                 <QuizView 
-                    lesson={activeLesson} 
-                    onExit={() => setActiveLesson(null)} 
+                    lesson={activeLesson}
                     onComplete={handleLessonComplete}
+                    onExit={() => setActiveLesson(null)}
                 />
             )}
         </div>
