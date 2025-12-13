@@ -2,77 +2,230 @@
 import { Lessons, SimulationStep } from "./types";
 
 export const lessons: Lessons = {
-    math1: {
-        id: "MAT1",
-        title: "Matemática I",
-        subtitle: "Cálculo Univariado",
-        icon: "📉",
-        description: "Funções de uma variável, Limites e Derivadas aplicadas à microeconomia básica.",
+    applied_math: {
+        id: "MAT",
+        title: "Matemática Aplicada",
+        subtitle: "Métodos Quantitativos",
+        icon: "📐",
+        description: "Fundamentos matemáticos para análise econômica: Cálculo Univariado, Multivariado e Dinâmica.",
         modules: [
+            // --- MATEMÁTICA I (Atualizada com Fases) ---
             {
-                id: "MAT1-01",
-                title: "Funções e Custos",
+                id: "MAT1-P1",
+                title: "I. Mecanismo da Mudança",
                 status: "unlocked",
                 type: "quiz",
                 questions: [
                     {
-                        topic: "Conceito (Concreto)",
-                        question: "Você é dono de uma fábrica de sapatos. O aluguel do galpão é R$ 1.000 (mesmo se não produzir nada) e o couro custa R$ 20 por par. Qual componente representa o Custo Variável?",
-                        hint: "O custo variável muda dependendo da quantidade produzida (q).",
+                        topic: "Limites (Definição)",
+                        question: "Calcule o limite: lim(x→2) (x² + 3x - 1)",
+                        hint: "Substitua x por 2 na expressão.",
                         options: [
-                            { text: "Os R$ 20 por par de sapatos.", correct: true },
-                            { text: "O aluguel de R$ 1.000.", correct: false },
-                            { text: "A soma de ambos.", correct: false }
+                            { text: "9", correct: true },
+                            { text: "7", correct: false },
+                            { text: "11", correct: false }
                         ],
-                        explanation: "GASING (Concreto): O Custo Variável depende de 'q'. Se q=0, você não gasta com couro, mas ainda paga o aluguel (Custo Fixo)."
+                        explanation: "2² + 3(2) - 1 = 4 + 6 - 1 = 9."
                     },
                     {
-                        topic: "Gráfico (Visual)",
-                        question: "No gráfico do Custo Total C(q) = 1000 + 20q, o que representa a inclinação da reta?",
-                        hint: "A inclinação diz o quanto o custo sobe para cada unidade extra produzida.",
+                        topic: "Limites (Fatoração)",
+                        question: "Calcule o limite: lim(x→3) (x² - 9)/(x - 3)",
+                        hint: "Fatore o numerador como (x-3)(x+3).",
                         options: [
-                            { text: "O Custo Marginal (R$ 20).", correct: true },
-                            { text: "O Custo Fixo (R$ 1000).", correct: false },
-                            { text: "A quantidade produzida.", correct: false }
+                            { text: "6", correct: true },
+                            { text: "0", correct: false },
+                            { text: "Indeterminado", correct: false }
                         ],
-                        explanation: "GASING (Visual): A inclinação é a taxa de variação. Em funções lineares, é constante. Economicamente, é o custo de produzir uma unidade a mais."
+                        explanation: "Cortando (x-3), sobra x+3. Para x=3, temos 3+3=6."
                     },
                     {
-                        topic: "Abstração (Matemática)",
-                        question: "Dada a função C(q) = 200 + 15q. Qual é o custo total para produzir 10 unidades?",
-                        hint: "Substitua q por 10 na equação.",
+                        topic: "Derivada (Polinômio)",
+                        question: "Se f(x) = 4x³ - 2x, calcule f'(1).",
+                        hint: "Regra do tombo: Derivada de xⁿ é n·xⁿ⁻¹.",
                         options: [
-                            { text: "R$ 350", correct: true },
-                            { text: "R$ 215", correct: false },
-                            { text: "R$ 150", correct: false }
+                            { text: "10", correct: true },
+                            { text: "12", correct: false },
+                            { text: "2", correct: false }
                         ],
-                        explanation: "C(10) = 200 + 15(10) = 200 + 150 = 350."
+                        explanation: "f'(x) = 12x² - 2. Em x=1: 12(1)² - 2 = 10."
                     },
                     {
-                        topic: "Cálculo de Lucro",
-                        question: "Se você vende cada unidade por R$ 25 e seu custo é C(q) = 200 + 15q, qual a função Lucro L(q)?",
-                        hint: "Lucro = Receita Total - Custo Total. Receita = Preço x Quantidade.",
+                        topic: "Custo Marginal",
+                        question: "Custo Total: C(q) = 100 + 50q - 2q². Qual o Custo Marginal (CMg) quando q=10?",
+                        hint: "Derive C(q) para achar o CMg e substitua q=10.",
                         options: [
-                            { text: "L(q) = 10q - 200", correct: true },
-                            { text: "L(q) = 25q - 200", correct: false },
-                            { text: "L(q) = 40q + 200", correct: false }
+                            { text: "10", correct: true },
+                            { text: "30", correct: false },
+                            { text: "50", correct: false }
                         ],
-                        explanation: "R(q) = 25q. L(q) = 25q - (200 + 15q) = 10q - 200."
+                        explanation: "CMg = 50 - 4q. Substituindo q=10: 50 - 4(10) = 10."
+                    },
+                    {
+                        topic: "Conceito Visual",
+                        question: "A derivada f'(a) representa a inclinação de qual reta?",
+                        hint: "Aquela que toca a curva em apenas um ponto localmente.",
+                        options: [
+                            { text: "Reta Tangente", correct: true },
+                            { text: "Reta Secante", correct: false },
+                            { text: "Reta Normal", correct: false }
+                        ],
+                        explanation: "A derivada é o coeficiente angular da reta tangente à curva no ponto a."
+                    },
+                    {
+                        topic: "Derivada de Constante",
+                        question: "Qual é o valor de d/dx(500π)?",
+                        hint: "500π é um número fixo, não tem x.",
+                        options: [
+                            { text: "0", correct: true },
+                            { text: "500", correct: false },
+                            { text: "500π", correct: false }
+                        ],
+                        explanation: "A derivada de uma constante é sempre zero, pois não há variação."
                     }
                 ]
-            }
-        ]
-    },
-    math2: {
-        id: "MAT2",
-        title: "Matemática II",
-        subtitle: "Cálculo Multivariado",
-        icon: "🏔️",
-        description: "Funções de várias variáveis, Derivadas Parciais e Otimização Estática.",
-        modules: [
+            },
+            {
+                id: "MAT1-P2",
+                title: "I. Análise de Comportamento",
+                status: "unlocked",
+                type: "quiz",
+                questions: [
+                    {
+                        topic: "Regra da Cadeia",
+                        question: "Se y = (2x + 1)³. Calcule y' em x=0.",
+                        hint: "Use a regra da cadeia: deriva fora x deriva dentro.",
+                        options: [
+                            { text: "6", correct: true },
+                            { text: "3", correct: false },
+                            { text: "12", correct: false }
+                        ],
+                        explanation: "y' = 3(2x+1)² · 2. Em x=0: 3(1)² · 2 = 6."
+                    },
+                    {
+                        topic: "L'Hopital",
+                        question: "Limite x→1 de (x⁵ - 1)/(x - 1). Use L'Hopital.",
+                        hint: "Derive o numerador e o denominador separadamente.",
+                        options: [
+                            { text: "5", correct: true },
+                            { text: "1", correct: false },
+                            { text: "0", correct: false }
+                        ],
+                        explanation: "Derivada de x⁵ é 5x⁴. Derivada de x é 1. Resultado: 5(1)⁴/1 = 5."
+                    },
+                    {
+                        topic: "Função Exponencial",
+                        question: "Qual a derivada de f(x) = eˣ?",
+                        hint: "É a única função cuja derivada é ela mesma.",
+                        options: [
+                            { text: "eˣ", correct: true },
+                            { text: "x·eˣ⁻¹", correct: false },
+                            { text: "x", correct: false }
+                        ],
+                        explanation: "A função exponencial natural é imune à derivada."
+                    },
+                    {
+                        topic: "Crescimento",
+                        question: "Se f'(x) = 2x - 4. Em que x a função para de decrescer e começa a crescer?",
+                        hint: "Encontre onde a derivada é zero (ponto crítico).",
+                        options: [
+                            { text: "2", correct: true },
+                            { text: "4", correct: false },
+                            { text: "0", correct: false }
+                        ],
+                        explanation: "2x - 4 = 0 → 2x = 4 → x = 2. Antes de 2 ela desce, depois sobe."
+                    },
+                    {
+                        topic: "Concavidade",
+                        question: "Se a segunda derivada f''(x) < 0, a concavidade é para...?",
+                        hint: "Imagine um rosto triste.",
+                        options: [
+                            { text: "Baixo (Côncava)", correct: true },
+                            { text: "Cima (Convexa)", correct: false },
+                            { text: "Nula", correct: false }
+                        ],
+                        explanation: "Derivada segunda negativa indica concavidade para baixo (formato de U invertido)."
+                    },
+                    {
+                        topic: "Inflexão",
+                        question: "Se f(x) = x³, onde é o ponto de inflexão?",
+                        hint: "Onde a segunda derivada zera?",
+                        options: [
+                            { text: "x = 0", correct: true },
+                            { text: "x = 1", correct: false },
+                            { text: "x = 3", correct: false }
+                        ],
+                        explanation: "f' = 3x², f'' = 6x. Igualando a zero: 6x=0 → x=0."
+                    }
+                ]
+            },
+            {
+                id: "MAT1-P3",
+                title: "I. Otimização Econômica",
+                status: "unlocked",
+                type: "quiz",
+                questions: [
+                    {
+                        topic: "Maximização de Lucro",
+                        question: "Lucro L(q) = -q² + 10q - 5. Qual q maximiza o lucro?",
+                        hint: "Derive e iguale a zero para achar o topo.",
+                        options: [
+                            { text: "5", correct: true },
+                            { text: "10", correct: false },
+                            { text: "-5", correct: false }
+                        ],
+                        explanation: "L' = -2q + 10 = 0 → 2q = 10 → q=5."
+                    },
+                    {
+                        topic: "Teste da 2ª Derivada",
+                        question: "Num ponto crítico, se f''(c) > 0 (sorriso), temos um...?",
+                        hint: "Se a concavidade é para cima, estamos no fundo do vale.",
+                        options: [
+                            { text: "Mínimo Relativo", correct: true },
+                            { text: "Máximo Relativo", correct: false },
+                            { text: "Ponto de Sela", correct: false }
+                        ],
+                        explanation: "Concavidade para cima (positiva) indica um Mínimo."
+                    },
+                    {
+                        topic: "Cobb-Douglas",
+                        question: "Produção P = 10 · L⁰'⁵ · K⁰'⁵. Se L=4 e K=9, qual é o valor de P?",
+                        hint: "Lembre-se que elevar a 0,5 é o mesmo que tirar a raiz quadrada.",
+                        options: [
+                            { text: "60", correct: true },
+                            { text: "30", correct: false },
+                            { text: "100", correct: false }
+                        ],
+                        explanation: "Raiz de 4 é 2. Raiz de 9 é 3. P = 10 · 2 · 3 = 60."
+                    },
+                    {
+                        topic: "Derivada Parcial",
+                        question: "Se f(x,y) = x² + y². Qual o valor de ∂f/∂x no ponto (1, 3)?",
+                        hint: "Derive em relação a x e trate y como constante.",
+                        options: [
+                            { text: "2", correct: true },
+                            { text: "1", correct: false },
+                            { text: "4", correct: false }
+                        ],
+                        explanation: "A derivada parcial em x é 2x. Substituindo x=1, temos 2(1) = 2."
+                    },
+                    {
+                        topic: "Lagrange (Conceito)",
+                        question: "No ponto ótimo de Lagrange, as curvas de nível da função objetivo tangenciam a...?",
+                        hint: "É a linha que define o que você PODE gastar.",
+                        options: [
+                            { text: "Restrição (Orçamentária)", correct: true },
+                            { text: "Origem dos eixos", correct: false },
+                            { text: "Eixo X", correct: false }
+                        ],
+                        explanation: "A otimização ocorre onde a inclinação da função objetivo iguala a inclinação da restrição."
+                    }
+                ]
+            },
+            
+            // --- MATEMÁTICA II (Restaurada) ---
             {
                 id: "MAT2-01",
-                title: "Derivadas Parciais",
+                title: "II. Derivadas Parciais",
                 status: "unlocked",
                 type: "quiz",
                 questions: [
@@ -121,19 +274,12 @@ export const lessons: Lessons = {
                         explanation: "Derivada de 3x² em relação a y é 0. Derivada de 10 é 0. Derivada de 5y³ é 15y²."
                     }
                 ]
-            }
-        ]
-    },
-    math3: {
-        id: "MAT3",
-        title: "Matemática III",
-        subtitle: "Dinâmica",
-        icon: "⏳",
-        description: "Equações Diferenciais, Diferenças Finitas e Otimização Dinâmica.",
-        modules: [
+            },
+
+            // --- MATEMÁTICA III (Restaurada) ---
             {
                 id: "MAT3-01",
-                title: "Introdução à Dinâmica",
+                title: "III. Dinâmica",
                 status: "unlocked",
                 type: "quiz",
                 questions: [
