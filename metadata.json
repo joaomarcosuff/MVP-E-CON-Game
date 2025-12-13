@@ -1,4 +1,6 @@
 {
+  "_version": "1.0.0",
+  "_status": "stable",
   "name": "Copy of Macro Game - USP Edition",
   "description": "A macroeconomic simulator based on the USP Manual, featuring Firebase Authentication and Firestore persistence for student progress tracking.",
   "requestFramePermissions": []

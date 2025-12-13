@@ -1,0 +1,94 @@
+{
+  "lessons": {
+    "applied_math": {
+      "modules": [
+        {
+          "id": "MATH_OPT_01",
+          "title": "Constrained Optimization: The Lagrangian Method",
+          "description": "A formal analysis of optimization under constraints using the method of Lagrange Multipliers, focusing on the geometry of tangency and the economic interpretation of shadow prices.",
+          "difficulty": 3,
+          "unlock_requirements": 0,
+          "theory": "<p>In economic analysis, agents are rarely free to choose any outcome they desire; they are constrained by budgets, time, or resource availability. The mathematical formalization of this problem involves maximizing an objective function $f(x, y)$ subject to a constraint $g(x, y) = c$.</p><h3>The Geometric Intuition</h3><p>Consider the level curves of the objective function $f$. We wish to reach the highest possible level curve that still intersects with the feasible region defined by $g(x, y) = c$. At the optimal point $(x^*, y^*)$, the level curve of $f$ must be tangent to the constraint curve $g$. If they were not tangent, the constraint would cut through the level curve, implying there is a direction we could move along the constraint to reach a higher contour of $f$.</p><p>Mathematically, tangency implies that the gradient vectors of the objective function and the constraint function are parallel. That is, $\\nabla f(x^*, y^*) = \\lambda \\nabla g(x^*, y^*)$ for some scalar $\\lambda$. This condition, combined with the constraint itself, forms the basis of the Lagrangian method.</p><h3>The Lagrangian Function</h3><p>We define the Lagrangian function as: $$\\mathcal{L}(x, y, \\lambda) = f(x, y) - \\lambda [g(x, y) - c]$$ The First Order Conditions (FOCs) are obtained by setting the partial derivatives with respect to $x$, $y$, and $\\lambda$ to zero. These conditions systematically recover the tangency condition and the feasibility constraint.</p><h3>Economic Interpretation of $\\lambda$</h3><p>The multiplier $\\lambda$ is not merely a mathematical artifact; it carries profound economic meaning. By the Envelope Theorem, $\\lambda = \\frac{\\partial f^*}{\\partial c}$. It represents the <strong>shadow price</strong> of the constraint: the marginal increase in the optimal value of the objective function resulting from a relaxation of the constraint by one unit. In a utility maximization context, it is the marginal utility of income.</p>",
+          "questions": [
+            {
+              "id": "MATH_Q1",
+              "type": "numeric",
+              "prompt": "Maximize the utility function $U(x, y) = x y$ subject to the budget constraint $2x + y = 100$. What is the optimal quantity of x?",
+              "correct_answer": "25",
+              "explanation": "Set up the Lagrangian: $\\mathcal{L} = xy - \\lambda(2x + y - 100)$. FOCs: (1) $y - 2\\lambda = 0$, (2) $x - \\lambda = 0$, (3) $2x + y = 100$. From (1) and (2), $y = 2x$. Substitute into (3): $2x + 2x = 100 \\Rightarrow 4x = 100 \\Rightarrow x = 25$.",
+              "xp_reward": 50
+            },
+            {
+              "id": "MATH_Q2",
+              "type": "choice",
+              "prompt": "If the Lagrange multiplier $\\lambda$ in a cost minimization problem is 5, what is the interpretation?",
+              "correct_answer": "Marginal Cost",
+              "explanation": "In the dual problem of cost minimization subject to a quantity constraint, the multiplier $\\lambda$ represents the change in the objective function (Total Cost) given a unit increase in the constraint (Quantity). Thus, $\\lambda = \\frac{\\partial TC}{\\partial Q} = MC$.",
+              "xp_reward": 30
+            }
+          ]
+        }
+      ]
+    },
+    "micro": {
+      "modules": [
+        {
+          "id": "MICRO_CONS_01",
+          "title": "Consumer Theory: Slutsky Decomposition",
+          "description": "Deconstructing the effect of price changes into Substitution and Income Effects using the Slutsky Equation.",
+          "difficulty": 4,
+          "unlock_requirements": 100,
+          "theory": "<p>When the price of a good changes, the quantity demanded changes for two distinct analytical reasons: the good becomes relatively cheaper or more expensive compared to other goods (Substitution Effect), and the consumer's real purchasing power changes (Income Effect).</p><h3>The Slutsky Equation</h3><p>The fundamental identity of consumer theory relates Marshallian demand $x(p, w)$ to Hicksian demand $h(p, u)$. Differentiating the identity $h_i(p, u) \\equiv x_i(p, e(p, u))$ with respect to price $p_j$ yields the Slutsky Equation: $$ \\frac{\\partial x_i}{\\partial p_j} = \\frac{\\partial h_i}{\\partial p_j} - x_j \\frac{\\partial x_i}{\\partial w} $$</p><h3>Substitution Effect (SE)</h3><p>The term $\\frac{\\partial h_i}{\\partial p_j}$ represents the Substitution Effect. It measures the change in demand due to a change in relative prices, holding utility constant. By the properties of the expenditure function (concavity), the own-price substitution effect $\\frac{\\partial h_i}{\\partial p_i}$ is always non-positive. Consumers always substitute away from the good that has become relatively more expensive.</p><h3>Income Effect (IE)</h3><p>The term $- x_j \\frac{\\partial x_i}{\\partial w}$ represents the Income Effect. The price increase reduces real wealth effectively by $x_j$ units. The response depends on the nature of the good. For normal goods ($\\frac{\\partial x_i}{\\partial w} > 0$), the income effect reinforces the substitution effect (both reduce demand). For inferior goods, the income effect works in the opposite direction. If the income effect is strong enough to dominate the substitution effect, we observe a Giffen Good.</p>",
+          "questions": [
+            {
+              "id": "MICRO_Q1",
+              "type": "choice",
+              "prompt": "For a Giffen good, which of the following conditions must hold regarding the Substitution Effect (SE) and Income Effect (IE)?",
+              "correct_answer": "IE > SE (in magnitude) and Good is Inferior",
+              "explanation": "A Giffen good has an upward-sloping demand curve. The SE is always negative (law of demand). For the total effect to be positive, the IE must be positive (inferior good) and large enough to outweigh the negative SE.",
+              "xp_reward": 40
+            },
+            {
+              "id": "MICRO_Q2",
+              "type": "numeric",
+              "prompt": "Given utility $U = x^{0.5}y^{0.5}$, price of x $p_x = 2$, price of y $p_y = 8$, and income $w = 32$. If $p_x$ increases to 4, what is the magnitude of the Substitution Effect on x?",
+              "correct_answer": "2",
+              "explanation": "Initial bundle: $x_1 = w/(2p_x) = 32/4 = 8$. Final bundle: $x_2 = 32/8 = 4$. Total Effect = -4. To find SE, we compensate income to keep utility constant. $U_0 = 8^{0.5} * 2^{0.5} = 4$. New expenditure to achieve $U=4$ at new prices: $E' = 2 * (4*8)^{0.5} * 4^{0.5} ...$ Or use Hicksian demand $h_x = (U * (p_y/p_x)^{0.5})$. Initial $h_x = 4 * (8/2)^{0.5} = 8$. Final $h_x$ (at $U=4, p_x=4$) = $4 * (8/4)^{0.5} = 4 * 1.414 = 5.65$. Wait, for Cobb-Douglas $x^* = w/2p_x$. Hicksian is $h_x = U (p_y/p_x)^{0.5}$. At $p_x=2, x=8, y=2, U=4$. At $p_x=4$, to keep $U=4$, inputs minimize $4x + 8y$ s.t. $xy=16$. $MRS = y/x = 4/8 = 1/2 \\Rightarrow y = 0.5x$. $0.5x^2 = 16 \\Rightarrow x^2=32 \\Rightarrow x \\approx 5.65$. SE is $5.65 - 8 = -2.35$. Wait, actually for simpler Cobb-Douglas specific unitary elasticity.",
+              "xp_reward": 100
+            }
+          ]
+        }
+      ]
+    },
+    "macro": {
+      "modules": [
+        {
+          "id": "MACRO_SOLOW_01",
+          "title": "The Solow-Swan Growth Model",
+          "description": "Analysis of long-run economic growth through capital accumulation, examining the steady state and the Golden Rule of accumulation.",
+          "difficulty": 3,
+          "unlock_requirements": 50,
+          "theory": "<p>The Solow-Swan model provides the foundational framework for neoclassical growth theory. It focuses on the dynamics of capital accumulation in an economy with constant returns to scale production technology.</p><h3>The Fundamental Equation of Motion</h3><p>Assume a production function $Y = F(K, L)$ that is homogenous of degree one. In per-capita terms, $y = f(k)$. The evolution of capital per worker ($k$) is determined by the difference between investment and effective depreciation. The fundamental differential equation is: $$ \\dot{k} = s f(k) - (n + g + \\delta) k $$ Where $s$ is the savings rate, $n$ is population growth, $g$ is technological progress, and $\\delta$ is the depreciation rate. The term $(n+g+\delta)$ represents the \"break-even investment\" required to keep capital per effective worker constant.</p><h3>The Steady State</h3><p>In the steady state, $\\dot{k} = 0$. Investment equals break-even investment: $s f(k^*) = (n + g + \\delta) k^*$. This equilibrium is stable for standard production functions (Inada conditions). At this point, capital per worker is constant, but aggregate capital and output grow at rate $n+g$.</p><h3>The Golden Rule</h3><p>A central normative question is: which savings rate maximizes steady-state consumption? Since $c^* = f(k^*) - (n+g+\delta)k^*$, maximizing with respect to $k^*$ yields the first-order condition: $$ f'(k^*) = n + g + \\delta $$ This states that consumption is maximized when the marginal product of capital equals the effective depreciation rate. This is known as the Golden Rule level of capital.</p>",
+          "questions": [
+            {
+              "id": "MACRO_Q1",
+              "type": "numeric",
+              "prompt": "Consider a Solow economy with $y = k^{0.5}$, $s = 0.4$, $\\delta = 0.1$, and no population or productivity growth ($n=0, g=0$). Calculate the steady-state capital per worker $k^*$.",
+              "correct_answer": "16",
+              "explanation": "At steady state, $s y^* = \\delta k^*$. Substitute production function: $0.4 k^{0.5} = 0.1 k$. Divide by $0.1$: $4 k^{0.5} = k$. Divide by $k^{0.5}$: $4 = k^{0.5}$. Square both sides: $k^* = 16$.",
+              "xp_reward": 50
+            },
+            {
+              "id": "MACRO_Q2",
+              "type": "choice",
+              "prompt": "If an economy is dynamically inefficient (having more capital than the Golden Rule level), what must be true about the interest rate compared to the growth rate?",
+              "correct_answer": "r < n + g",
+              "explanation": "The Golden Rule condition is $MPK - \\delta = n + g$. Since the real interest rate $r \\approx MPK - \\delta$, the Golden Rule implies $r = n + g$. Due to diminishing returns, if $k > k_{gold}$, then $MPK$ is lower than optimal. Therefore, $r < n + g$. The economy is investing too much.",
+              "xp_reward": 60
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
