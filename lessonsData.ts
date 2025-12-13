@@ -1,5 +1,4 @@
 
-
 import { GameData } from './types';
 
 export const lessonsData: GameData = {
@@ -24,7 +23,7 @@ export const lessonsData: GameData = {
                 {
                     "id": "m1_l1_q1",
                     "type": "numeric",
-                    "latex": "\\text{Custo Total } C(q) = 100 + 10q. \\text{ Qual o Custo Marginal?}",
+                    "latex": "$$ \\text{Custo Total } C(q) = 100 + 10q. \\\\ \\text{Qual o Custo Marginal?} $$",
                     "answer": "10",
                     "hint": "Derive em relação a q.",
                     "explanation": "A derivada de 10q é 10. O 100 (custo fixo) desaparece na derivada."
@@ -58,15 +57,15 @@ export const lessonsData: GameData = {
                 {
                     "id": "m1_l2_q1",
                     "type": "numeric",
-                    "latex": "\\text{Se } f(x) = x^4. \\text{ Calcule } f'(2).",
+                    "latex": "$$ \\text{Se } f(x) = x^4. \\text{ Calcule } f'(2). $$",
                     "answer": "32",
                     "hint": "Use 4x^3.",
                     "explanation": "$f'(x) = 4x^3$. $4 \\cdot 2^3 = 4 \\cdot 8 = 32$."
                 },
                 {
                     "id": "m1_l2_q2",
-                    "latex": "\\text{O gráfico de } y=x^2 \\text{ fica mais ÍNGREME que } y=x \\text{? (Sim/Não)}",
-                    "type": "multiple_choice", // Adapting to handled type
+                    "type": "multiple_choice",
+                    "latex": "$$ \\text{O gráfico de } y=x^2 \\text{ fica mais ÍNGREME que } y=x \\text{? (Sim/Não)} $$",
                     "options": ["Sim", "Não"],
                     "answer": "Sim",
                     "hint": "A inclinação aumenta?",
@@ -91,7 +90,7 @@ export const lessonsData: GameData = {
                  {
                     "id": "m1_l3_q1",
                     "type": "numeric",
-                    "latex": "\\frac{d}{dx}(1050)",
+                    "latex": "$$ \\frac{d}{dx}(1050) $$",
                     "answer": "0",
                     "hint": "Isso é um número fixo.",
                     "explanation": "A variação de algo parado é zero."
@@ -109,7 +108,7 @@ export const lessonsData: GameData = {
                 {
                     "id": "m1_l3_q3",
                     "type": "multiple_choice",
-                    "latex": "\\text{Se o Custo Fixo dobra, o Custo Marginal muda?}",
+                    "latex": "$$ \\text{Se o Custo Fixo dobra, o Custo Marginal muda?} $$",
                     "options": ["Sim", "Não"],
                     "answer": "Não",
                     "hint": "A derivada de 100 é 0. A de 200 também.",
@@ -126,7 +125,7 @@ export const lessonsData: GameData = {
                 {
                     "id": "m1_l4_q1",
                     "type": "numeric",
-                    "latex": "f(x) = x^2 + 3x. \\text{ Calcule } f'(1).",
+                    "latex": "$$ f(x) = x^2 + 3x. \\text{ Calcule } f'(1). $$",
                     "answer": "5",
                     "hint": "2x + 3.",
                     "explanation": "$2(1) + 3 = 5$."
@@ -142,7 +141,7 @@ export const lessonsData: GameData = {
                 {
                     "id": "m1_l4_q3",
                     "type": "numeric",
-                    "latex": "\\text{Custo } C(q) = q^3 - q^2. \\text{ CMg em } q=10?",
+                    "latex": "$$ \\text{Custo } C(q) = q^3 - q^2. \\text{ CMg em } q=10? $$",
                     "answer": "280",
                     "hint": "3q^2 - 2q.",
                     "explanation": "$3(100) - 2(10) = 300 - 20 = 280$."
@@ -166,7 +165,7 @@ export const lessonsData: GameData = {
                 {
                     "id": "m1_l5_q2",
                     "type": "numeric",
-                    "latex": "\\text{Se } RMg = 10 \\text{ e } CMg = 8. \\text{ Lucro Marginal?}",
+                    "latex": "$$ \\text{Se } RMg = 10 \\text{ e } CMg = 8. \\\\ \\text{ Lucro Marginal?} $$",
                     "answer": "2",
                     "hint": "Receita - Custo.",
                     "explanation": "Sim, pois o lucro marginal é positivo (2)."
