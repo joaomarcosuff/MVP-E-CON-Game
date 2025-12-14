@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import katex from 'katex';
-import { Track, Module, Lesson, Question, PlayerProgress } from './types';
+import { Track, Module, Lesson, Question, PlayerProgress, LessonCard } from './types';
 import { lessonsData } from './lessonsData';
 import { progressionRules } from './progressionRules';
 
@@ -57,54 +57,79 @@ const LatexText: React.FC<{ text: string; className?: string }> = ({ text, class
     );
 };
 
-const ProgressBar: React.FC<{ current: number; total: number }> = ({ current, total }) => {
-    // Calculates percentage (current is 1-based index for display, so current/total)
-    // Ensures it doesn't exceed 100%
+const ProgressBar: React.FC<{ current: number; total: number; color?: string }> = ({ current, total, color = "bg-brand-success" }) => {
     const percentage = Math.min(100, Math.max(0, (current / total) * 100));
     
     return (
         <div className="w-full bg-slate-200 rounded-full h-3 mb-4 overflow-hidden">
             <div 
-                className="bg-brand-success h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(16,185,129,0.4)]" 
+                className={`${color} h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(0,0,0,0.1)]`} 
                 style={{ width: `${percentage}%` }}
             ></div>
         </div>
     );
 };
 
-// --- COMPONENTS ---
+const HeaderStats: React.FC<{ progress: PlayerProgress }> = ({ progress }) => {
+    return (
+        <div className="flex gap-3 md:gap-6">
+            <div className="flex items-center gap-2 text-amber-400 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                <span>⚡</span>
+                <span>{progress.xp}</span>
+            </div>
+            <div className="flex items-center gap-2 text-orange-400 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                <span>🔥</span>
+                <span>{progress.streak}</span>
+            </div>
+             <div className="flex items-center gap-2 text-red-500 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                <span>❤️</span>
+                <span>{progress.hearts}</span>
+            </div>
+        </div>
+    );
+};
 
-const HeaderStats: React.FC<{ progress: PlayerProgress }> = ({ progress }) => (
-    <div className="flex gap-4 items-center">
-        <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
-            <span className="text-red-500 text-xl">❤️</span>
-            <span className="font-bold text-slate-700">{progress.hearts}</span>
-        </div>
-        <div className="flex items-center gap-1 bg-orange-100/50 px-3 py-1 rounded-full border border-orange-200">
-            <span className="text-xl">🔥</span>
-            <span className="font-bold text-orange-700">{progress.streak}</span>
-        </div>
-        <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
-            <span className="text-amber-500 text-xl">⚡</span>
-            <span className="font-bold text-slate-700">{progress.xp}</span>
-        </div>
-    </div>
-);
-
-// --- QUIZ COMPONENT ---
+// --- QUIZ / LESSON COMPONENT ---
 
 const QuizView: React.FC<{
     lesson: Lesson;
     onComplete: (xpEarned: number, success: boolean) => void;
     onExit: () => void;
 }> = ({ lesson, onComplete, onExit }) => {
+    // Phase Management: Do we have cards to show first?
+    const [phase, setPhase] = useState<'CARDS' | 'QUIZ'>(
+        (lesson.cards && lesson.cards.length > 0) ? 'CARDS' : 'QUIZ'
+    );
+
+    // Card State
+    const [cardIndex, setCardIndex] = useState(0);
+
+    // Quiz State
     const [qIndex, setQIndex] = useState(0);
     const [feedback, setFeedback] = useState<{ correct: boolean; text: string } | null>(null);
     const [inputVal, setInputVal] = useState('');
     const [correctCount, setCorrectCount] = useState(0);
 
-    // Dynamic reference to total questions in this lesson
+    // References
     const totalQuestions = lesson.questions.length;
+    const totalCards = lesson.cards ? lesson.cards.length : 0;
+    
+    // --- CARD HANDLERS ---
+    const handleNextCard = () => {
+        if (cardIndex < totalCards - 1) {
+            setCardIndex(prev => prev + 1);
+        } else {
+            setPhase('QUIZ');
+        }
+    };
+
+    const handlePrevCard = () => {
+        if (cardIndex > 0) {
+            setCardIndex(prev => prev - 1);
+        }
+    };
+
+    // --- QUIZ HANDLERS ---
     const question = lesson.questions[qIndex];
 
     const handleSubmit = (ans: string) => {
@@ -120,7 +145,6 @@ const QuizView: React.FC<{
         } else if (question.type === 'multiple_choice') {
              isCorrect = userAns === correctAns;
         } else if (question.type === 'graph_point') {
-             // Handled by handleGraphClick
              isCorrect = ans === 'correct'; 
         }
 
@@ -140,18 +164,16 @@ const QuizView: React.FC<{
 
         const svg = e.currentTarget;
         const rect = svg.getBoundingClientRect();
-        // Calculate click position relative to SVG 300x300 viewBox
         const x = ((e.clientX - rect.left) / rect.width) * 300;
         const y = ((e.clientY - rect.top) / rect.height) * 300;
 
         const dx = Math.abs(x - question.target.x);
         const dy = Math.abs(y - question.target.y);
         
-        // Tolerance check
         const isHit = dx < question.target.tolerance && dy < question.target.tolerance;
         
         if (isHit) {
-            handleSubmit("correct"); // Special keyword for graph success
+            handleSubmit("correct");
         } else {
             setFeedback({
                 correct: false,
@@ -160,22 +182,18 @@ const QuizView: React.FC<{
         }
     };
 
-    const handleNext = () => {
+    const handleNextQuestion = () => {
         setFeedback(null);
         setInputVal('');
         
-        // CORRECTION: Logic to ensure ALL questions are shown
-        // Uses totalQuestions (questions.length) as the source of truth
         if (qIndex < totalQuestions - 1) {
             setQIndex(prev => prev + 1);
         } else {
-            // End of Lesson Logic
             const accuracy = correctCount / totalQuestions;
             const success = accuracy >= progressionRules.unlock_logic.min_accuracy_to_unlock;
             
             let xp = 0;
             if (success) {
-                // Base XP + Bonus Logic
                 xp = lesson.xp;
                 if (correctCount === totalQuestions) {
                     xp += progressionRules.xp_system.perfect_lesson_bonus;
@@ -185,147 +203,210 @@ const QuizView: React.FC<{
         }
     };
 
-    // --- RENDER QUESTION TYPES ---
+    // --- RENDERERS ---
 
-    const renderContent = () => {
-        if (!question) return <div>Carregando...</div>;
+    const renderCard = () => {
+        const card = lesson.cards[cardIndex];
+        
+        const getCardIcon = (type: LessonCard['type']) => {
+            switch(type) {
+                case 'story': return '📖';
+                case 'concept': return '💡';
+                case 'visual': return '👁️';
+                case 'formal': return '📐';
+                case 'example': return '🧪';
+                case 'economic_intuition': return '🧠';
+                default: return '📄';
+            }
+        };
 
-        // 1. Graph Point Question
-        if (question.type === 'graph_point') {
-            return (
-                <div className="flex flex-col items-center w-full animate-fade-in">
-                    <p className="mb-4 text-center font-bold text-slate-700">{question.instruction}</p>
-                    <div className="relative w-full max-w-sm aspect-square bg-white border-2 border-slate-200 rounded-xl shadow-inner cursor-crosshair overflow-hidden">
-                        <svg viewBox="0 0 300 300" className="w-full h-full" onClick={handleGraphClick}>
-                             <defs>
-                                <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                                    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
-                                </pattern>
-                            </defs>
-                            <rect width="100%" height="100%" fill="url(#grid)" />
-                            {/* Axes */}
-                            <line x1="10" y1="280" x2="290" y2="280" stroke="#94a3b8" strokeWidth="2" />
-                            <line x1="20" y1="290" x2="20" y2="10" stroke="#94a3b8" strokeWidth="2" />
-                            {/* The Curve */}
-                            <path d={question.svgPath} fill="none" stroke="#4338ca" strokeWidth="3" strokeLinecap="round" />
-                        </svg>
-                        {feedback && (
-                            <div 
-                                className={`absolute w-8 h-8 rounded-full border-2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center
-                                ${feedback.correct ? 'border-emerald-500 bg-emerald-100' : 'border-red-500 bg-red-100'}`}
-                                style={{ left: `${(question.target!.x / 300)*100}%`, top: `${(question.target!.y / 300)*100}%` }}
-                            >
-                                {feedback.correct ? '✓' : '✕'}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
+        const getCardColor = (type: LessonCard['type']) => {
+             switch(type) {
+                case 'story': return 'bg-amber-50 border-amber-200 text-amber-900';
+                case 'concept': return 'bg-blue-50 border-blue-200 text-blue-900';
+                case 'visual': return 'bg-purple-50 border-purple-200 text-purple-900';
+                case 'formal': return 'bg-slate-100 border-slate-300 text-slate-800';
+                case 'example': return 'bg-emerald-50 border-emerald-200 text-emerald-900';
+                case 'economic_intuition': return 'bg-pink-50 border-pink-200 text-pink-900';
+                default: return 'bg-white border-slate-200';
+            }
+        };
 
-        // 2. Fill Gap
-        if (question.type === 'fill_gap') {
-             const parts = question.text?.split('{{gap}}') || ["", ""];
-             return (
-                 <div className="text-xl leading-loose text-center font-medium text-slate-700 animate-fade-in">
-                     <span>{parts[0]}</span>
-                     <input 
-                        type="text" 
-                        value={inputVal}
-                        onChange={(e) => setInputVal(e.target.value)}
-                        disabled={!!feedback}
-                        className="mx-2 px-2 py-1 border-b-2 border-brand-primary w-32 text-center font-bold outline-none bg-slate-50 focus:bg-white"
-                        placeholder="?"
-                     />
-                     <span>{parts[1]}</span>
-                     {!feedback && (
-                        <button onClick={() => handleSubmit(inputVal)} className="block mx-auto mt-6 bg-brand-primary text-white px-6 py-2 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">Verificar</button>
-                     )}
-                 </div>
-             );
-        }
-
-        // 3. Numeric / Input
-        if (question.type === 'numeric' || question.type === 'input') {
-            return (
-                <div className="w-full max-w-sm animate-fade-in">
-                    {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={inputVal}
-                            onChange={(e) => setInputVal(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && !feedback && inputVal && handleSubmit(inputVal)}
-                            disabled={!!feedback}
-                            placeholder="Sua resposta..."
-                            className="flex-1 p-4 border-2 border-slate-300 rounded-xl font-bold text-center outline-none focus:border-brand-primary transition-colors"
-                        />
-                        {!feedback && (
-                            <button 
-                                onClick={() => handleSubmit(inputVal)}
-                                disabled={!inputVal}
-                                className="bg-brand-primary text-white px-6 rounded-xl font-bold hover:bg-brand-dark shadow-lg transition-transform active:scale-95 disabled:opacity-50"
-                            >
-                                OK
-                            </button>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        // 4. Multiple Choice (Default)
         return (
-            <div className="w-full animate-fade-in">
-                {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
-                <div className="grid gap-3">
-                    {question.options?.map((opt, i) => (
-                        <button
-                            key={i}
-                            disabled={!!feedback}
-                            onClick={() => handleSubmit(opt)}
-                            className={`p-4 rounded-xl border-b-4 font-bold text-left transition-all active:border-b-0 active:translate-y-1 ${
-                                feedback 
-                                    ? opt.toLowerCase() === question.answer.toLowerCase() 
-                                        ? 'bg-emerald-100 border-emerald-500 text-emerald-800' // Correct answer shown
-                                        : 'bg-slate-50 border-slate-200 opacity-50' // Others dimmed
-                                    : 'bg-white border-slate-200 hover:border-brand-primary hover:bg-indigo-50 text-slate-700'
-                            }`}
-                        >
-                            <LatexText text={opt} />
-                        </button>
-                    ))}
+            <div className="flex flex-col h-full animate-fade-in">
+                {/* Card Header */}
+                <div className="flex justify-between items-center mb-6">
+                    <button onClick={onExit} className="text-slate-400 font-black hover:text-red-500 transition-colors text-xl">✕</button>
+                    <div className="text-xs font-black uppercase tracking-widest text-brand-primary">
+                        Aula: {cardIndex + 1} / {totalCards}
+                    </div>
+                    <div className="w-5"></div>
+                </div>
+                <ProgressBar current={cardIndex + 1} total={totalCards} color="bg-brand-primary" />
+
+                {/* Card Content */}
+                <div className="flex-grow flex flex-col items-center justify-center overflow-y-auto px-4 py-8">
+                    <div className={`w-full max-w-lg p-8 rounded-3xl border-4 shadow-xl ${getCardColor(card.type)} transition-all duration-300`}>
+                        <div className="text-5xl mb-6 text-center">{getCardIcon(card.type)}</div>
+                        <h2 className="text-2xl md:text-3xl font-black text-center mb-6">{card.title}</h2>
+                        
+                        <div className="prose prose-lg text-current mx-auto leading-relaxed">
+                            {card.html && <div dangerouslySetInnerHTML={{ __html: card.html }} />}
+                            {card.latex && <div className="mt-6 text-center text-xl bg-white/50 p-4 rounded-xl"><LatexText text={card.latex} /></div>}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card Navigation */}
+                <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-4">
+                    <button 
+                        onClick={handlePrevCard}
+                        disabled={cardIndex === 0}
+                        className="flex-1 py-4 rounded-xl font-bold text-slate-500 bg-white border-2 border-slate-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100"
+                    >
+                        VOLTAR
+                    </button>
+                    <button 
+                        onClick={handleNextCard}
+                        className="flex-[2] py-4 rounded-xl font-black text-white text-lg shadow-lg bg-brand-primary hover:bg-brand-dark transition-transform active:scale-95"
+                    >
+                        {cardIndex === totalCards - 1 ? 'IR PARA QUESTÕES ➜' : 'PRÓXIMO'}
+                    </button>
                 </div>
             </div>
         );
     };
 
-    return (
-        <div className="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-slide-up">
-                {/* Header with Progress Bar */}
-                <div className="p-6 border-b border-slate-100 bg-slate-50">
+    const renderQuiz = () => {
+        const renderQuestionContent = () => {
+            if (!question) return <div>Carregando...</div>;
+
+            if (question.type === 'graph_point') {
+                return (
+                    <div className="flex flex-col items-center w-full animate-fade-in">
+                        <p className="mb-4 text-center font-bold text-slate-700">{question.instruction}</p>
+                        <div className="relative w-full max-w-sm aspect-square bg-white border-2 border-slate-200 rounded-xl shadow-inner cursor-crosshair overflow-hidden">
+                            <svg viewBox="0 0 300 300" className="w-full h-full" onClick={handleGraphClick}>
+                                 <defs>
+                                    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                                        <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
+                                    </pattern>
+                                </defs>
+                                <rect width="100%" height="100%" fill="url(#grid)" />
+                                <line x1="10" y1="280" x2="290" y2="280" stroke="#94a3b8" strokeWidth="2" />
+                                <line x1="20" y1="290" x2="20" y2="10" stroke="#94a3b8" strokeWidth="2" />
+                                <path d={question.svgPath} fill="none" stroke="#4338ca" strokeWidth="3" strokeLinecap="round" />
+                            </svg>
+                            {feedback && (
+                                <div 
+                                    className={`absolute w-8 h-8 rounded-full border-2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center
+                                    ${feedback.correct ? 'border-emerald-500 bg-emerald-100' : 'border-red-500 bg-red-100'}`}
+                                    style={{ left: `${(question.target!.x / 300)*100}%`, top: `${(question.target!.y / 300)*100}%` }}
+                                >
+                                    {feedback.correct ? '✓' : '✕'}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            if (question.type === 'fill_gap') {
+                 const parts = question.text?.split('{{gap}}') || ["", ""];
+                 return (
+                     <div className="text-xl leading-loose text-center font-medium text-slate-700 animate-fade-in">
+                         <span>{parts[0]}</span>
+                         <input 
+                            type="text" 
+                            value={inputVal}
+                            onChange={(e) => setInputVal(e.target.value)}
+                            disabled={!!feedback}
+                            className="mx-2 px-2 py-1 border-b-2 border-brand-primary w-32 text-center font-bold outline-none bg-slate-50 focus:bg-white"
+                            placeholder="?"
+                         />
+                         <span>{parts[1]}</span>
+                         {!feedback && (
+                            <button onClick={() => handleSubmit(inputVal)} className="block mx-auto mt-6 bg-brand-primary text-white px-6 py-2 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">Verificar</button>
+                         )}
+                     </div>
+                 );
+            }
+
+            if (question.type === 'numeric' || question.type === 'input') {
+                return (
+                    <div className="w-full max-w-sm animate-fade-in">
+                        {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={inputVal}
+                                onChange={(e) => setInputVal(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && !feedback && inputVal && handleSubmit(inputVal)}
+                                disabled={!!feedback}
+                                placeholder="Sua resposta..."
+                                className="flex-1 p-4 border-2 border-slate-300 rounded-xl font-bold text-center outline-none focus:border-brand-primary transition-colors"
+                            />
+                            {!feedback && (
+                                <button 
+                                    onClick={() => handleSubmit(inputVal)}
+                                    disabled={!inputVal}
+                                    className="bg-brand-primary text-white px-6 rounded-xl font-bold hover:bg-brand-dark shadow-lg transition-transform active:scale-95 disabled:opacity-50"
+                                >
+                                    OK
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="w-full animate-fade-in">
+                    {question.latex && <div className="text-xl text-center mb-6"><LatexText text={question.latex} /></div>}
+                    <div className="grid gap-3">
+                        {question.options?.map((opt, i) => (
+                            <button
+                                key={i}
+                                disabled={!!feedback}
+                                onClick={() => handleSubmit(opt)}
+                                className={`p-4 rounded-xl border-b-4 font-bold text-left transition-all active:border-b-0 active:translate-y-1 ${
+                                    feedback 
+                                        ? opt.toLowerCase() === question.answer.toLowerCase() 
+                                            ? 'bg-emerald-100 border-emerald-500 text-emerald-800' 
+                                            : 'bg-slate-50 border-slate-200 opacity-50' 
+                                        : 'bg-white border-slate-200 hover:border-brand-primary hover:bg-indigo-50 text-slate-700'
+                                }`}
+                            >
+                                <LatexText text={opt} />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        return (
+            <div className="flex flex-col h-full animate-slide-up">
+                 <div className="p-6 border-b border-slate-100 bg-slate-50">
                     <div className="flex justify-between items-center mb-2">
                          <button onClick={onExit} className="text-slate-400 font-black hover:text-red-500 transition-colors text-xl">✕</button>
                          <div className="text-xs font-black uppercase tracking-widest text-brand-primary">
                             Questão {qIndex + 1} de {totalQuestions}
                          </div>
-                         <div className="w-5"></div> {/* Spacer for alignment */}
+                         <div className="w-5"></div>
                     </div>
-                    <ProgressBar current={qIndex + 1} total={totalQuestions} />
+                    <ProgressBar current={qIndex + 1} total={totalQuestions} color="bg-brand-success" />
                 </div>
                 
-                {/* Content Area */}
                 <div className="p-8 flex-grow overflow-y-auto flex flex-col items-center justify-center">
                     {question?.prompt && (
                         <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center mb-8 leading-relaxed">
                             <LatexText text={question.prompt} />
                         </h2>
                     )}
-                    {renderContent()}
+                    {renderQuestionContent()}
                 </div>
 
-                {/* Feedback Area */}
                 {feedback && (
                     <div className={`p-6 border-t-2 animate-slide-up ${feedback.correct ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
                         <div className="flex flex-col gap-2">
@@ -342,7 +423,7 @@ const QuizView: React.FC<{
                             </div>
                         </div>
                         <button 
-                            onClick={handleNext} 
+                            onClick={handleNextQuestion} 
                             className={`w-full py-4 rounded-xl font-black text-white text-lg shadow-lg hover:-translate-y-1 transition-all uppercase tracking-wide
                                 ${feedback.correct ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-900/20' : 'bg-red-500 hover:bg-red-600 shadow-red-900/20'}
                             `}
@@ -351,6 +432,14 @@ const QuizView: React.FC<{
                         </button>
                     </div>
                 )}
+            </div>
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden h-[90vh]">
+                {phase === 'CARDS' ? renderCard() : renderQuiz()}
             </div>
         </div>
     );

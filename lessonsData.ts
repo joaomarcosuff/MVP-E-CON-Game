@@ -19,6 +19,41 @@ export const lessonsData: GameData = {
               "title": "1. Média vs Marginal",
               "description": "O Conceito de Margem",
               "xp": 50,
+              "cards": [
+                {
+                    "type": "story",
+                    "title": "O Paradoxo da Água e do Diamante",
+                    "html": "<p>Imagine que você está no deserto, morrendo de sede. O primeiro copo d'água tem valor infinito: ele salva sua vida. O segundo copo é ótimo, mas não vital. O terceiro é apenas refrescante.</p><p class='mt-4'>Agora imagine o 50º copo. Você provavelmente o usaria para lavar as mãos.</p><p class='mt-4 font-semibold'>Isso é pensar na margem.</p><p>Não importa o quanto a água é valiosa <i>no total</i> (média). O que define nossas decisões econômicas é o valor da <b>próxima unidade</b> (marginal).</p>"
+                },
+                {
+                    "type": "concept",
+                    "title": "Média vs. Instantânea",
+                    "html": "<p>Se você viajou 200km em 4 horas, sua <b>Velocidade Média</b> foi de 50km/h. Isso é o histórico, o passado.</p><p class='mt-4'>Mas, ao passar por um radar, ele não quer saber sua média. Ele quer saber sua velocidade <b>naquele exato instante</b>.</p><p class='mt-4'>A <b>Margem</b> (ou Derivada) é o velocímetro da economia. Ela nos diz quão rápido o Custo (ou Lucro) está mudando <i>agora</i>, se produzirmos apenas mais uma unidade.</p>"
+                },
+                {
+                    "type": "visual",
+                    "title": "O Zoom Infinito",
+                    "html": "<p>Geometricamente, a média é uma linha que conecta dois pontos distantes (Reta Secante).</p><p class='mt-4'>Para achar a marginal, aproximamos esses pontos até que se tornem um só. A linha que apenas 'resvala' na curva naquele ponto é a <b>Reta Tangente</b>.</p><p class='mt-4'>A inclinação dessa reta tangente é a Derivada.</p>",
+                    "latex": "$$ \\text{Inclinação} = \\frac{\\Delta y}{\\Delta x} \\to \\text{Derivada} = \\frac{dy}{dx} $$"
+                },
+                {
+                    "type": "formal",
+                    "title": "A Definição Formal",
+                    "html": "<p>Matematicamente, definimos a derivada como o limite da taxa de variação quando a mudança na entrada (h) tende a zero.</p>",
+                    "latex": "$$ f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} $$"
+                },
+                {
+                    "type": "example",
+                    "title": "Custo Marginal na Prática",
+                    "html": "<p>Suponha que o Custo Total de uma fábrica seja dado por:</p><div class='bg-slate-100 p-2 rounded text-center font-mono my-2'>C(q) = 100 + 10q</div><p>O 100 é o aluguel (Custo Fixo). O 10q é a matéria-prima.</p><p class='mt-4'>Se derivarmos em relação a <i>q</i>:</p>",
+                    "latex": "$$ C'(q) = \\frac{d}{dq}(100) + \\frac{d}{dq}(10q) = 0 + 10 = 10 $$"
+                },
+                {
+                    "type": "economic_intuition",
+                    "title": "A Regra de Ouro",
+                    "html": "<p>Por que isso importa? Agentes racionais tomam decisões na margem.</p><p class='mt-4'>Você só deve produzir a próxima unidade se o dinheiro que ela traz (<b>Receita Marginal</b>) for maior que o custo para produzi-la (<b>Custo Marginal</b>).</p><div class='bg-emerald-100 border-l-4 border-emerald-500 p-4 mt-4 text-emerald-900'><b>Regra de Ouro:</b> O lucro é máximo quando RMg = CMg.</div>"
+                }
+              ],
               "questions": [
                 {
                     "id": "m1_l1_q1",
@@ -53,6 +88,7 @@ export const lessonsData: GameData = {
               "title": "2. Regra da Potência",
               "description": "A Regra do Tombo",
               "xp": 50,
+              "cards": [],
               "questions": [
                 {
                     "id": "m1_l2_q1",
@@ -86,6 +122,7 @@ export const lessonsData: GameData = {
               "title": "3. O Custo Fixo",
               "description": "Derivada de Constante",
               "xp": 50,
+              "cards": [],
               "questions": [
                  {
                     "id": "m1_l3_q1",
@@ -121,6 +158,7 @@ export const lessonsData: GameData = {
               "title": "4. Polinômios",
               "description": "A Soma das Partes",
               "xp": 75,
+              "cards": [],
               "questions": [
                 {
                     "id": "m1_l4_q1",
@@ -153,6 +191,7 @@ export const lessonsData: GameData = {
               "title": "5. Traduzindo para Dinheiro",
               "description": "Interpretação Econômica",
               "xp": 100,
+              "cards": [],
               "questions": [
                  {
                     "id": "m1_l5_q1",

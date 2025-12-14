@@ -1,4 +1,10 @@
 
+export interface LessonCard {
+    type: "story" | "concept" | "visual" | "formal" | "example" | "economic_intuition";
+    title: string;
+    html?: string;
+    latex?: string;
+}
 
 export interface Question {
     id: string;
@@ -26,6 +32,7 @@ export interface Lesson {
     title: string;
     description: string;
     xp: number;
+    cards: LessonCard[]; // New field for teaching content
     questions: Question[];
     nextModule?: string | null;
 }
