@@ -63,6 +63,8 @@ export interface PlayerProgress {
     completedLessons: string[]; // Array of Lesson IDs
     hearts: number;
     lastLoginDate: string;
+    displayName?: string; // Nome do usuário
+    photoURL?: string; // Foto do usuário
 }
 
 export interface ProgressionRules {

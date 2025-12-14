@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import katex from 'katex';
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "./firebaseClient";
 import { Track, Module, Lesson, Question, PlayerProgress, LessonCard } from './types';
 import { lessonsData } from './lessonsData';
 import { progressionRules } from './progressionRules';
 import { playSFX } from './audioService';
 
 // --- TYPES FOR VIEW STATE ---
-type ViewState = 'HOME' | 'TRACKS' | 'LEVELS' | 'LESSONS' | 'QUIZ' | 'MODULE_COMPLETE';
+type ViewState = 'HOME' | 'LOGIN' | 'TRACKS' | 'LEVELS' | 'LESSONS' | 'QUIZ' | 'MODULE_COMPLETE';
 
 // --- MOCK AUTH FOR MVP (Local Storage) ---
 const usePlayerProgress = () => {
@@ -19,7 +21,9 @@ const usePlayerProgress = () => {
             streak: 0,
             completedLessons: [],
             hearts: 5,
-            lastLoginDate: new Date().toISOString()
+            lastLoginDate: new Date().toISOString(),
+            displayName: 'Viajante',
+            photoURL: ''
         };
     });
 
@@ -73,7 +77,22 @@ const ProgressBar: React.FC<{ current: number; total: number; color?: string }> 
 
 const HeaderStats: React.FC<{ progress: PlayerProgress }> = ({ progress }) => {
     return (
-        <div className="flex gap-3 md:gap-6">
+        <div className="flex items-center gap-3 md:gap-6">
+            {/* User Info */}
+            <div className="flex items-center gap-3 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 mr-2">
+                {progress.photoURL ? (
+                    <img src={progress.photoURL} alt="Avatar" className="w-8 h-8 rounded-full border-2 border-brand-primary" />
+                ) : (
+                    <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white font-bold border-2 border-indigo-400">
+                        {progress.displayName ? progress.displayName.charAt(0).toUpperCase() : 'V'}
+                    </div>
+                )}
+                <span className="text-white font-semibold text-sm hidden md:block max-w-[100px] truncate">
+                    {progress.displayName || 'Viajante'}
+                </span>
+            </div>
+
+            {/* Stats */}
             <div className="flex items-center gap-2 text-amber-400 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">
                 <span>⚡</span>
                 <span>{progress.xp}</span>
@@ -530,6 +549,31 @@ export default function App() {
 
     // --- LOGIC ---
 
+    const handleGoogleLogin = async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            
+            // Merge user data with existing progress logic
+            setProgress(prev => ({
+                ...prev,
+                displayName: user.displayName || 'Viajante',
+                photoURL: user.photoURL || undefined
+            }));
+            
+            playSFX('correct');
+            setView('TRACKS');
+        } catch (error) {
+            console.error("Login failed", error);
+            // Optionally handle error UI
+        }
+    };
+
+    const handleGuestLogin = () => {
+        playSFX('correct');
+        setView('TRACKS');
+    };
+
     const handleLessonComplete = (xpEarned: number, success: boolean) => {
         if (success && activeLesson) {
              // 1. Determine new progress state BEFORE updating it
@@ -588,12 +632,42 @@ export default function App() {
             <button 
                 onClick={() => {
                     playSFX('correct'); // Interaction sound
-                    setView('TRACKS');
+                    setView('LOGIN');
                 }}
                 className="bg-brand-success text-white px-12 py-4 rounded-2xl font-black text-xl shadow-lg shadow-emerald-900/20 hover:scale-105 transition-transform active:scale-95"
             >
                 COMEÇAR JORNADA
             </button>
+        </div>
+    );
+
+    const renderLogin = () => (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4 animate-fade-in">
+             <div className="bg-white/5 backdrop-blur-lg border border-white/10 p-8 rounded-3xl shadow-2xl max-w-sm w-full">
+                <h2 className="text-2xl font-bold text-white mb-2">Identifique-se</h2>
+                <p className="text-indigo-200 text-sm mb-8">Salve seu progresso e suba no ranking.</p>
+
+                <button 
+                    onClick={handleGoogleLogin}
+                    className="w-full bg-white text-slate-900 py-3 rounded-xl font-bold mb-4 flex items-center justify-center gap-3 hover:bg-slate-100 transition-colors shadow-lg"
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5"/>
+                    Entrar com Google
+                </button>
+
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                    <div className="relative flex justify-center text-sm"><span className="px-2 bg-slate-900 text-slate-500">ou</span></div>
+                </div>
+
+                <button 
+                    onClick={handleGuestLogin}
+                    className="w-full bg-transparent border-2 border-white/20 text-white/70 py-3 rounded-xl font-bold hover:bg-white/5 transition-colors"
+                >
+                    Continuar como Convidado
+                </button>
+             </div>
+             <button onClick={() => setView('HOME')} className="mt-8 text-white/50 font-bold hover:text-white">← VOLTAR</button>
         </div>
     );
 
@@ -728,8 +802,8 @@ export default function App() {
 
     return (
         <div className="min-h-screen bg-slate-900 font-sans selection:bg-brand-primary selection:text-white">
-            {/* GLOBAL HEADER (Except on Home) */}
-            {view !== 'HOME' && view !== 'QUIZ' && view !== 'MODULE_COMPLETE' && (
+            {/* GLOBAL HEADER (Except on Home/Login) */}
+            {view !== 'HOME' && view !== 'LOGIN' && view !== 'QUIZ' && view !== 'MODULE_COMPLETE' && (
                 <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur border-b border-white/10 p-4">
                     <div className="max-w-5xl mx-auto flex justify-between items-center">
                         <div className="font-black text-white text-xl tracking-tight cursor-pointer" onClick={() => setView('HOME')}>
@@ -743,6 +817,7 @@ export default function App() {
             {/* MAIN CONTENT AREA */}
             <main className="animate-fade-in">
                 {view === 'HOME' && renderHome()}
+                {view === 'LOGIN' && renderLogin()}
                 {view === 'TRACKS' && renderTracks()}
                 {view === 'LEVELS' && renderLevels()}
                 {view === 'LESSONS' && renderLessonList()}
