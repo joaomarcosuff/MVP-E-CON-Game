@@ -139,35 +139,122 @@ export const lessonsData: GameData = {
             },
             {
               "id": "MAT1-L02",
-              "title": "2. Regra da Potência",
-              "description": "A Regra do Tombo",
+              "title": "Regra da Potência",
+              "description": "Aplicação da regra da potência x^n → nx^(n-1)",
               "xp": 50,
-              "cards": [],
+              "cards": [
+                {
+                  "type": "story",
+                  "title": "O Padrão Oculto",
+                  "html": "<p>Um fabricante percebe algo estranho: quando dobra a produção de 10 para 20 unidades, o custo não dobra. Quando triplica de 10 para 30, o custo não triplica.</p><p class='mt-4'>Por quê? Porque o custo cresce como <i>q²</i>, não como <i>q</i>.</p><p class='mt-4'>Para entender quanto o custo muda ao produzir mais uma unidade, precisamos de uma ferramenta: <b>a Regra da Potência</b>.</p><p class='mt-4'>Essa regra nos permite derivar qualquer função do tipo x<sup>n</sup> de forma instantânea, sem precisar calcular limites toda vez.</p>"
+                },
+                {
+                  "type": "concept",
+                  "title": "A Regra do Tombo",
+                  "html": "<p>Quando você tem uma função potência f(x) = x<sup>n</sup>, a derivada segue um padrão simples:</p><p class='mt-4'><b>1.</b> O expoente <i>n</i> 'tomba' para frente (vira coeficiente)</p><p class='mt-4'><b>2.</b> Subtraia 1 do expoente</p><p class='mt-4'>Exemplo visual:</p><p class='mt-2 text-center font-mono'>x<sup>5</sup> → 5·x<sup>4</sup></p><p class='mt-2 text-center font-mono'>x<sup>3</sup> → 3·x<sup>2</sup></p><p class='mt-2 text-center font-mono'>x<sup>2</sup> → 2·x<sup>1</sup> = 2x</p><p class='mt-4'>O número 'cai' da potência e o expoente diminui em 1.</p>"
+                },
+                {
+                  "type": "visual",
+                  "title": "Por Que Funciona?",
+                  "html": "<p>Considere f(x) = x². Vamos calcular a derivada pela definição:</p><p class='mt-4'>Expandindo (x+h)²:</p>",
+                  "latex": "$$f'(x) = \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h} = \\lim_{h \\to 0} \\frac{x^2 + 2xh + h^2 - x^2}{h}$$<p class='mt-4'>Simplificando:</p>$$= \\lim_{h \\to 0} \\frac{2xh + h^2}{h} = \\lim_{h \\to 0} (2x + h) = 2x$$<p class='mt-4'>O expoente 2 virou coeficiente, e o novo expoente é 2-1=1. Exatamente como a regra prevê!</p>"
+                },
+                {
+                  "type": "formal",
+                  "title": "A Regra Geral da Potência",
+                  "html": "<p>Para qualquer número real <i>n</i> (positivo, negativo ou fracionário), a regra da potência afirma:</p>",
+                  "latex": "$$\\text{Se } f(x) = x^n, \\text{ então } f'(x) = n \\cdot x^{n-1}$$"
+                },
+                {
+                  "type": "example",
+                  "title": "Exemplo 1: Custo Quadrático",
+                  "html": "<p>Suponha C(q) = q². Vamos calcular o Custo Marginal.</p><p class='mt-4'><b>Passo 1:</b> Identificar n = 2</p><p class='mt-4'><b>Passo 2:</b> Aplicar a regra: n·q<sup>n-1</sup></p>",
+                  "latex": "$$C'(q) = 2 \\cdot q^{2-1} = 2q$$<p class='mt-4'>Isso significa: quando você está produzindo <i>q</i> unidades, o custo da próxima unidade é aproximadamente 2q.</p>"
+                },
+                {
+                  "type": "example",
+                  "title": "Exemplo 2: Potências Maiores",
+                  "html": "<p>Agora considere R(q) = q⁴. Qual é a Receita Marginal?</p><p class='mt-4'><b>Aplicando a regra:</b></p>",
+                  "latex": "$$R'(q) = 4 \\cdot q^{4-1} = 4q^3$$<p class='mt-4'>Note que a receita marginal cresce muito mais rápido (é cúbica), indicando economias de escala crescentes.</p>"
+                },
+                {
+                  "type": "example",
+                  "title": "Exemplo 3: Calculando em um Ponto",
+                  "html": "<p>Se f(x) = x⁴, calcule f'(2).</p><p class='mt-4'><b>Passo 1:</b> Derive f(x)</p>",
+                  "latex": "$$f'(x) = 4x^3$$<p class='mt-4'><b>Passo 2:</b> Substitua x = 2</p>$$f'(2) = 4 \\cdot 2^3 = 4 \\cdot 8 = 32$$<p class='mt-4'>Em x=2, a função está crescendo à taxa de 32 unidades por unidade de x.</p>"
+                },
+                {
+                  "type": "economic_intuition",
+                  "title": "Interpretação: Taxas de Crescimento",
+                  "html": "<p>A regra da potência revela algo importante sobre custos e receitas:</p><p class='mt-4'><b>• Se C(q) = q² (quadrático):</b> CMg = 2q cresce linearmente</p><p class='mt-4'><b>• Se C(q) = q³ (cúbico):</b> CMg = 3q² cresce quadraticamente</p><p class='mt-4'>Quanto maior o expoente original, mais rápido o custo marginal aumenta. Isso explica deseconomias de escala: produzir muito fica progressivamente mais caro por unidade.</p><div class='bg-blue-100 border-l-4 border-blue-500 p-4 mt-4 text-blue-900'><p class='font-semibold'>Implicação Prática:</p><p>Firmas com custos quadráticos ou cúbicos enfrentam CMg crescente → há um limite ótimo de produção.</p></div>"
+                }
+              ],
               "questions": [
                 {
-                    "id": "m1_l2_q1",
-                    "type": "numeric",
-                    "latex": "$$ \\text{Se } f(x) = x^4. \\text{ Calcule } f'(2). $$",
-                    "answer": "32",
-                    "hint": "Use 4x^3.",
-                    "explanation": "$f'(x) = 4x^3$. $4 \\cdot 2^3 = 4 \\cdot 8 = 32$."
+                  "id": "m1_l2_q1",
+                  "type": "numeric",
+                  "latex": "$$\\text{Se } f(x) = x^4, \\text{ calcule } f'(2).$$",
+                  "answer": "32",
+                  "hint": "Primeiro encontre f'(x) usando a regra da potência, depois substitua x=2.",
+                  "explanation": "f'(x) = 4x³. Substituindo x=2: f'(2) = 4·2³ = 4·8 = 32."
                 },
                 {
-                    "id": "m1_l2_q2",
-                    "type": "multiple_choice",
-                    "latex": "$$ \\text{O gráfico de } y=x^2 \\text{ fica mais ÍNGREME que } y=x \\text{? (Sim/Não)} $$",
-                    "options": ["Sim", "Não"],
-                    "answer": "Sim",
-                    "hint": "A inclinação aumenta?",
-                    "explanation": "A derivada de x é 1 (constante). A de x^2 é 2x (cresce com x)."
+                  "id": "m1_l2_q2",
+                  "type": "fill_gap",
+                  "text": "Para derivar x^n, você tomba o n e subtrai {{gap}} do expoente.",
+                  "answer": "um",
+                  "hint": "O novo expoente é n - ?",
+                  "explanation": "A regra é n·x^(n-1). Sempre subtraímos 1 do expoente original."
                 },
                 {
-                    "id": "m1_l2_q3",
-                    "type": "fill_gap",
-                    "text": "Para derivar $x^n$, você tomba o $n$ e subtrai {{gap}} do expoente.",
-                    "answer": "um",
-                    "hint": "n - 1",
-                    "explanation": "A regra é $n \\cdot x^{n-1}$."
+                  "id": "m1_l2_q3",
+                  "type": "multiple_choice",
+                  "latex": "$$\\text{Qual é a derivada de } g(x) = x^5?$$",
+                  "options": [
+                    "5x^4",
+                    "x^4",
+                    "5x^5",
+                    "4x^5"
+                  ],
+                  "answer": "5x^4",
+                  "hint": "Aplique a regra da potência: o expoente cai para frente.",
+                  "explanation": "g'(x) = 5·x^(5-1) = 5x⁴. O 5 tomba e o expoente vira 4."
+                },
+                {
+                  "id": "m1_l2_q4",
+                  "type": "numeric",
+                  "latex": "$$\\text{Se } C(q) = q^3, \\text{ qual é } C'(10)?$$",
+                  "answer": "300",
+                  "hint": "Primeiro derive: C'(q) = 3q². Depois substitua q=10.",
+                  "explanation": "C'(q) = 3q². Logo C'(10) = 3·10² = 3·100 = 300. Quando produzindo 10 unidades, o custo marginal é 300."
+                },
+                {
+                  "id": "m1_l2_q5",
+                  "type": "multiple_choice",
+                  "latex": "$$\\text{O gráfico de } y = x^2 \\text{ fica mais ÍNGREME que } y = x \\text{ conforme x cresce?}$$",
+                  "options": [
+                    "Sim",
+                    "Não"
+                  ],
+                  "answer": "Sim",
+                  "hint": "Compare as derivadas: y=x tem derivada constante. E y=x²?",
+                  "explanation": "A derivada de y=x é 1 (inclinação constante). A de y=x² é 2x, que cresce com x. Logo y=x² fica cada vez mais íngreme."
+                },
+                {
+                  "id": "m1_l2_q6",
+                  "type": "numeric",
+                  "latex": "$$\\text{Se } f(x) = x^6, \\text{ calcule } f'(1).$$",
+                  "answer": "6",
+                  "hint": "f'(x) = 6x⁵. Substitua x=1.",
+                  "explanation": "f'(x) = 6x⁵. Em x=1: f'(1) = 6·1⁵ = 6·1 = 6."
+                },
+                {
+                  "id": "m1_l2_q7",
+                  "type": "fill_gap",
+                  "text": "Se o Custo é C(q) = q³, o Custo Marginal CMg = 3q² cresce de forma {{gap}}.",
+                  "answer": "quadrática",
+                  "hint": "Qual é o formato de 3q²?",
+                  "explanation": "CMg = 3q² é uma função quadrática em q. Isso significa que o custo marginal acelera rapidamente conforme q aumenta."
                 }
               ]
             },

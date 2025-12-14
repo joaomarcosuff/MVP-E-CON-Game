@@ -7,7 +7,7 @@ import { progressionRules } from './progressionRules';
 import { playSFX } from './audioService';
 
 // --- TYPES FOR VIEW STATE ---
-type ViewState = 'HOME' | 'TRACKS' | 'LEVELS' | 'LESSONS' | 'QUIZ';
+type ViewState = 'HOME' | 'TRACKS' | 'LEVELS' | 'LESSONS' | 'QUIZ' | 'MODULE_COMPLETE';
 
 // --- MOCK AUTH FOR MVP (Local Storage) ---
 const usePlayerProgress = () => {
@@ -85,6 +85,67 @@ const HeaderStats: React.FC<{ progress: PlayerProgress }> = ({ progress }) => {
              <div className="flex items-center gap-2 text-red-500 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">
                 <span>❤️</span>
                 <span>{progress.hearts}</span>
+            </div>
+        </div>
+    );
+};
+
+// --- COMPONENTS ---
+
+const LevelCompletedView: React.FC<{ module: Module; onContinue: () => void }> = ({ module, onContinue }) => {
+    // Simple pure CSS confetti using emojis
+    const particles = Array.from({ length: 20 }).map((_, i) => ({
+        id: i,
+        left: Math.random() * 100 + '%',
+        delay: Math.random() * 2 + 's',
+        duration: 2 + Math.random() * 3 + 's'
+    }));
+
+    return (
+        <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center p-4 overflow-hidden">
+            {/* Background Particles */}
+            {particles.map(p => (
+                <div 
+                    key={p.id}
+                    className="absolute text-4xl animate-bounce opacity-30 pointer-events-none"
+                    style={{ 
+                        left: p.left, 
+                        top: '-10%',
+                        animation: `fall ${p.duration} linear infinite`,
+                        animationDelay: p.delay
+                    }}
+                >
+                    {['🎉', '⭐', '🎓', '💰', '📈'][Math.floor(Math.random() * 5)]}
+                </div>
+            ))}
+            <style>{`
+                @keyframes fall {
+                    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+                }
+            `}</style>
+
+            <div className="relative z-10 bg-white w-full max-w-md rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(79,70,229,0.5)] animate-slide-up">
+                <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center text-6xl mb-6 mx-auto shadow-lg animate-bounce">
+                    🏆
+                </div>
+                
+                <h2 className="text-3xl font-black text-slate-800 mb-2">NÍVEL CONCLUÍDO!</h2>
+                <p className="text-slate-500 font-medium text-lg mb-8">{module.title}</p>
+                
+                <div className="space-y-4 mb-8">
+                    <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between border border-slate-100">
+                        <span className="font-bold text-slate-600">Lições Dominadas</span>
+                        <span className="font-black text-brand-primary text-xl">{module.lessons.length} / {module.lessons.length}</span>
+                    </div>
+                </div>
+
+                <button 
+                    onClick={onContinue}
+                    className="w-full bg-brand-primary text-white py-4 rounded-2xl font-black text-xl shadow-xl hover:bg-brand-dark hover:scale-105 transition-all active:scale-95"
+                >
+                    CONTINUAR JORNADA
+                </button>
             </div>
         </div>
     );
@@ -471,19 +532,40 @@ export default function App() {
 
     const handleLessonComplete = (xpEarned: number, success: boolean) => {
         if (success && activeLesson) {
-             playSFX('level_up'); // SOUND TRIGGER
-             setProgress(prev => {
-                 const isReplay = prev.completedLessons.includes(activeLesson.id);
-                 return {
-                     ...prev,
-                     xp: prev.xp + (isReplay ? 0 : xpEarned),
-                     completedLessons: isReplay ? prev.completedLessons : [...prev.completedLessons, activeLesson.id],
-                     streak: prev.streak + 1
-                 };
-             });
+             // 1. Determine new progress state BEFORE updating it
+             const isReplay = progress.completedLessons.includes(activeLesson.id);
+             const newCompletedLessons = isReplay 
+                ? progress.completedLessons 
+                : [...progress.completedLessons, activeLesson.id];
+
+             // 2. Update Progress
+             setProgress(prev => ({
+                 ...prev,
+                 xp: prev.xp + (isReplay ? 0 : xpEarned),
+                 completedLessons: newCompletedLessons,
+                 streak: prev.streak + 1
+             }));
+
+             // 3. Check for Module Completion using the NEW list of completed lessons
+             const currentModule = getModule();
+             if (currentModule) {
+                 const allLessonsComplete = currentModule.lessons.every(l => newCompletedLessons.includes(l.id));
+                 
+                 if (allLessonsComplete && !isReplay) {
+                     // Play Victory Sound
+                     playSFX('level_up');
+                     setActiveLesson(null);
+                     setView('MODULE_COMPLETE');
+                     return;
+                 }
+             }
+
+             // Standard Lesson Complete Sound (if not module complete or replay)
+             if (!isReplay) playSFX('level_up'); 
         } else {
              setProgress(prev => ({ ...prev, hearts: Math.max(0, prev.hearts - 1), streak: 0 }));
         }
+        
         setActiveLesson(null);
         // Return to lesson list
         setView('LESSONS');
@@ -647,7 +729,7 @@ export default function App() {
     return (
         <div className="min-h-screen bg-slate-900 font-sans selection:bg-brand-primary selection:text-white">
             {/* GLOBAL HEADER (Except on Home) */}
-            {view !== 'HOME' && view !== 'QUIZ' && (
+            {view !== 'HOME' && view !== 'QUIZ' && view !== 'MODULE_COMPLETE' && (
                 <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur border-b border-white/10 p-4">
                     <div className="max-w-5xl mx-auto flex justify-between items-center">
                         <div className="font-black text-white text-xl tracking-tight cursor-pointer" onClick={() => setView('HOME')}>
@@ -664,6 +746,12 @@ export default function App() {
                 {view === 'TRACKS' && renderTracks()}
                 {view === 'LEVELS' && renderLevels()}
                 {view === 'LESSONS' && renderLessonList()}
+                {view === 'MODULE_COMPLETE' && getModule() && (
+                    <LevelCompletedView 
+                        module={getModule()!} 
+                        onContinue={() => setView('LEVELS')} 
+                    />
+                )}
             </main>
 
             {/* QUIZ MODAL OVERLAY */}
