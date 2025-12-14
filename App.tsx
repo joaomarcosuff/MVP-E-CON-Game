@@ -4,6 +4,7 @@ import katex from 'katex';
 import { Track, Module, Lesson, Question, PlayerProgress, LessonCard } from './types';
 import { lessonsData } from './lessonsData';
 import { progressionRules } from './progressionRules';
+import { playSFX } from './audioService';
 
 // --- TYPES FOR VIEW STATE ---
 type ViewState = 'HOME' | 'TRACKS' | 'LEVELS' | 'LESSONS' | 'QUIZ';
@@ -148,7 +149,12 @@ const QuizView: React.FC<{
              isCorrect = ans === 'correct'; 
         }
 
-        if (isCorrect) setCorrectCount(prev => prev + 1);
+        if (isCorrect) {
+            setCorrectCount(prev => prev + 1);
+            playSFX('correct'); // SOUND TRIGGER
+        } else {
+            playSFX('wrong'); // SOUND TRIGGER
+        }
 
         setFeedback({
             correct: isCorrect,
@@ -179,6 +185,7 @@ const QuizView: React.FC<{
                 correct: false,
                 text: question.explanation || "❌ Tente novamente. Clique na área indicada."
             });
+            playSFX('wrong'); // SOUND TRIGGER FOR GRAPH MISS
         }
     };
 
@@ -464,6 +471,7 @@ export default function App() {
 
     const handleLessonComplete = (xpEarned: number, success: boolean) => {
         if (success && activeLesson) {
+             playSFX('level_up'); // SOUND TRIGGER
              setProgress(prev => {
                  const isReplay = prev.completedLessons.includes(activeLesson.id);
                  return {
@@ -496,7 +504,10 @@ export default function App() {
             </p>
             
             <button 
-                onClick={() => setView('TRACKS')}
+                onClick={() => {
+                    playSFX('correct'); // Interaction sound
+                    setView('TRACKS');
+                }}
                 className="bg-brand-success text-white px-12 py-4 rounded-2xl font-black text-xl shadow-lg shadow-emerald-900/20 hover:scale-105 transition-transform active:scale-95"
             >
                 COMEÇAR JORNADA

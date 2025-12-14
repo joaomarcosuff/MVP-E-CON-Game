@@ -16,70 +16,124 @@ export const lessonsData: GameData = {
           "lessons": [
             {
               "id": "MAT1-L01",
-              "title": "1. Média vs Marginal",
-              "description": "O Conceito de Margem",
+              "title": "Média vs Marginal",
+              "description": "Introdução ao conceito de taxa de variação (inclinação da reta tangente) e limite",
               "xp": 50,
               "cards": [
                 {
-                    "type": "story",
-                    "title": "O Paradoxo da Água e do Diamante",
-                    "html": "<p>Imagine que você está no deserto, morrendo de sede. O primeiro copo d'água tem valor infinito: ele salva sua vida. O segundo copo é ótimo, mas não vital. O terceiro é apenas refrescante.</p><p class='mt-4'>Agora imagine o 50º copo. Você provavelmente o usaria para lavar as mãos.</p><p class='mt-4 font-semibold'>Isso é pensar na margem.</p><p>Não importa o quanto a água é valiosa <i>no total</i> (média). O que define nossas decisões econômicas é o valor da <b>próxima unidade</b> (marginal).</p>"
+                  "type": "story",
+                  "title": "O Paradoxo da Água e do Diamante",
+                  "html": "<p>Imagine que você está no deserto, morrendo de sede. O primeiro copo d'água tem valor infinito: ele salva sua vida. O segundo copo é ótimo, mas não vital. O terceiro é apenas refrescante.</p><p class='mt-4'>Agora imagine o 50º copo. Você provavelmente o usaria para lavar as mãos.</p><p class='mt-4 font-semibold'>Isso é pensar na margem.</p><p class='mt-4'>Não importa o quanto a água é valiosa <i>no total</i> (média). O que define nossas decisões econômicas é o valor da <b>próxima unidade</b> (marginal).</p>"
                 },
                 {
-                    "type": "concept",
-                    "title": "Média vs. Instantânea",
-                    "html": "<p>Se você viajou 200km em 4 horas, sua <b>Velocidade Média</b> foi de 50km/h. Isso é o histórico, o passado.</p><p class='mt-4'>Mas, ao passar por um radar, ele não quer saber sua média. Ele quer saber sua velocidade <b>naquele exato instante</b>.</p><p class='mt-4'>A <b>Margem</b> (ou Derivada) é o velocímetro da economia. Ela nos diz quão rápido o Custo (ou Lucro) está mudando <i>agora</i>, se produzirmos apenas mais uma unidade.</p>"
+                  "type": "concept",
+                  "title": "Média vs. Instantânea",
+                  "html": "<p>Se você viajou 200km em 4 horas, sua <b>Velocidade Média</b> foi de 50km/h. Isso é o histórico, o passado.</p><p class='mt-4'>Mas, ao passar por um radar, ele não quer saber sua média. Ele quer saber sua velocidade <b>naquele exato instante</b>.</p><p class='mt-4'>A <b>Margem</b> (ou Derivada) é o velocímetro da economia. Ela nos diz quão rápido o Custo (ou Lucro) está mudando <i>agora</i>, se produzirmos apenas mais uma unidade.</p>"
                 },
                 {
-                    "type": "visual",
-                    "title": "O Zoom Infinito",
-                    "html": "<p>Geometricamente, a média é uma linha que conecta dois pontos distantes (Reta Secante).</p><p class='mt-4'>Para achar a marginal, aproximamos esses pontos até que se tornem um só. A linha que apenas 'resvala' na curva naquele ponto é a <b>Reta Tangente</b>.</p><p class='mt-4'>A inclinação dessa reta tangente é a Derivada.</p>",
-                    "latex": "$$ \\text{Inclinação} = \\frac{\\Delta y}{\\Delta x} \\to \\text{Derivada} = \\frac{dy}{dx} $$"
+                  "type": "visual",
+                  "title": "O Zoom Infinito",
+                  "html": "<p>Geometricamente, a média é uma linha que conecta dois pontos distantes (Reta Secante).</p><p class='mt-4'>Para achar a marginal, aproximamos esses pontos até que se tornem um só. A linha que apenas 'resvala' na curva naquele ponto é a <b>Reta Tangente</b>.</p><p class='mt-4'>A inclinação dessa reta tangente é a Derivada.</p>",
+                  "latex": "$$\\text{Inclinação} = \\frac{\\Delta y}{\\Delta x} \\to \\text{Derivada} = \\frac{dy}{dx}$$"
                 },
                 {
-                    "type": "formal",
-                    "title": "A Definição Formal",
-                    "html": "<p>Matematicamente, definimos a derivada como o limite da taxa de variação quando a mudança na entrada (h) tende a zero.</p>",
-                    "latex": "$$ f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} $$"
+                  "type": "formal",
+                  "title": "A Definição Formal",
+                  "html": "<p>Matematicamente, definimos a derivada como o limite da taxa de variação quando a mudança na entrada (h) tende a zero.</p><p class='mt-4'>Seja <i>f</i> uma função real de uma variável real e <i>a</i> ∈ ℝ. A derivada de <i>f</i> em <i>a</i>, denotada por <i>f'(a)</i>, é:</p>",
+                  "latex": "$$f'(a) = \\lim_{h \\to 0} \\frac{f(a+h) - f(a)}{h}$$"
                 },
                 {
-                    "type": "example",
-                    "title": "Custo Marginal na Prática",
-                    "html": "<p>Suponha que o Custo Total de uma fábrica seja dado por:</p><div class='bg-slate-100 p-2 rounded text-center font-mono my-2'>C(q) = 100 + 10q</div><p>O 100 é o aluguel (Custo Fixo). O 10q é a matéria-prima.</p><p class='mt-4'>Se derivarmos em relação a <i>q</i>:</p>",
-                    "latex": "$$ C'(q) = \\frac{d}{dq}(100) + \\frac{d}{dq}(10q) = 0 + 10 = 10 $$"
+                  "type": "example",
+                  "title": "Exemplo: Custo Total Simples",
+                  "html": "<p>Suponha que o Custo Total de uma fábrica seja dado por:</p><p class='mt-2 font-mono text-center'>C(q) = 100 + 10q</p><p class='mt-4'>Onde 100 é o Custo Fixo (aluguel) e 10q representa o custo variável (matéria-prima).</p><p class='mt-4'><b>Pergunta:</b> Quanto custa produzir a próxima unidade?</p><p class='mt-4'><b>Solução:</b> Precisamos calcular a derivada de C(q) em relação a q:</p>",
+                  "latex": "$$C'(q) = \\frac{d}{dq}(100 + 10q) = 0 + 10 = 10$$"
                 },
                 {
-                    "type": "economic_intuition",
-                    "title": "A Regra de Ouro",
-                    "html": "<p>Por que isso importa? Agentes racionais tomam decisões na margem.</p><p class='mt-4'>Você só deve produzir a próxima unidade se o dinheiro que ela traz (<b>Receita Marginal</b>) for maior que o custo para produzi-la (<b>Custo Marginal</b>).</p><div class='bg-emerald-100 border-l-4 border-emerald-500 p-4 mt-4 text-emerald-900'><b>Regra de Ouro:</b> O lucro é máximo quando RMg = CMg.</div>"
+                  "type": "economic_intuition",
+                  "title": "A Regra de Ouro da Produção",
+                  "html": "<p>Por que isso importa? Agentes racionais tomam decisões na margem.</p><p class='mt-4'>Você só deve produzir a próxima unidade se o dinheiro que ela traz (<b>Receita Marginal</b>) for maior que o custo para produzi-la (<b>Custo Marginal</b>).</p><div class='bg-emerald-100 border-l-4 border-emerald-500 p-4 mt-4 text-emerald-900'><p class='font-semibold'>Regra de Ouro:</p><p>O lucro é máximo quando RMg = CMg.</p></div>"
+                },
+                {
+                  "type": "example",
+                  "title": "Exemplo: Taxa de Variação Média vs Instantânea",
+                  "html": "<p>Considere a função de custo C(q) = q² + 4q + 100.</p><p class='mt-4'><b>Taxa de Variação Média</b> entre q = 2 e q = 5:</p>",
+                  "latex": "$$\\frac{C(5) - C(2)}{5 - 2} = \\frac{(25+20+100) - (4+8+100)}{3} = \\frac{145 - 112}{3} = 11$$"
+                },
+                {
+                  "type": "formal",
+                  "title": "Calculando a Derivada em q = 2",
+                  "html": "<p>Agora vamos calcular a taxa de variação <b>instantânea</b> (derivada) em q = 2:</p><p class='mt-4'>Primeiro, encontramos a fórmula geral da derivada:</p>",
+                  "latex": "$$C'(q) = \\lim_{h \\to 0} \\frac{[(q+h)^2 + 4(q+h) + 100] - [q^2 + 4q + 100]}{h}$$<p class='mt-4'>Expandindo:</p>$$= \\lim_{h \\to 0} \\frac{q^2 + 2qh + h^2 + 4q + 4h + 100 - q^2 - 4q - 100}{h}$$<p class='mt-4'>Simplificando:</p>$$= \\lim_{h \\to 0} \\frac{2qh + h^2 + 4h}{h} = \\lim_{h \\to 0} (2q + h + 4) = 2q + 4$$<p class='mt-4'>Portanto, C'(2) = 2(2) + 4 = 8</p>"
                 }
               ],
               "questions": [
                 {
-                    "id": "m1_l1_q1",
-                    "type": "numeric",
-                    "latex": "$$ \\text{Custo Total } C(q) = 100 + 10q. \\\\ \\text{Qual o Custo Marginal?} $$",
-                    "answer": "10",
-                    "hint": "Derive em relação a q.",
-                    "explanation": "A derivada de 10q é 10. O 100 (custo fixo) desaparece na derivada."
+                  "id": "m1_l1_q1",
+                  "type": "numeric",
+                  "latex": "$$\\text{Custo Total } C(q) = 100 + 10q. \\text{ Qual o Custo Marginal?}$$",
+                  "answer": "10",
+                  "hint": "Derive em relação a q. Lembre-se: a derivada de uma constante é zero.",
+                  "explanation": "A derivada de 10q é 10. O 100 (custo fixo) desaparece na derivada, pois d/dq(100) = 0. Logo, CMg = 10."
                 },
                 {
-                    "id": "m1_l1_q2",
-                    "type": "graph_point",
-                    "instruction": "Clique onde a Reta Tangente (Marginal) seria horizontal.",
-                    "svgPath": "M 10 250 Q 150 10 290 250", 
-                    "target": { "x": 150, "y": 130, "tolerance": 50 },
-                    "hint": "Onde a inclinação é zero?",
-                    "answer": "Topo",
-                    "explanation": "No topo da curva, a variação instantânea é nula (tangente horizontal)."
+                  "id": "m1_l1_q2",
+                  "type": "fill_gap",
+                  "text": "A derivada é o limite da reta secante quando a distância entre os pontos tende a {{gap}}.",
+                  "answer": "zero",
+                  "hint": "Quando h → ?",
+                  "explanation": "Quando a distância h tende a zero, a reta secante se torna tangente, e a taxa média se torna instantânea (derivada)."
                 },
                 {
-                    "id": "m1_l1_q3",
-                    "type": "fill_gap",
-                    "text": "A derivada é o limite da reta secante quando a distância entre os pontos tende a {{gap}}.",
-                    "answer": "zero",
-                    "hint": "h -> ?",
-                    "explanation": "Quando a distância é zero, a média se torna instantânea."
+                  "id": "m1_l1_q3",
+                  "type": "multiple_choice",
+                  "latex": "$$\\text{Se C(q) = q^2 + 4q + 100, qual é C'(q)?}$$",
+                  "options": [
+                    "2q + 4",
+                    "q + 4",
+                    "2q",
+                    "q^2 + 4"
+                  ],
+                  "answer": "2q + 4",
+                  "hint": "Use a definição do limite ou as regras de derivação que apareceram nos cards.",
+                  "explanation": "Pela definição do limite (vista no card formal), obtemos C'(q) = 2q + 4. Cada termo foi derivado: d/dq(q²) = 2q, d/dq(4q) = 4, d/dq(100) = 0."
+                },
+                {
+                  "id": "m1_l1_q4",
+                  "type": "numeric",
+                  "latex": "$$\\text{Para } C(q) = q^2 + 4q + 100, \\text{ calcule } C'(2).$$",
+                  "answer": "8",
+                  "hint": "Primeiro encontre C'(q) = 2q + 4, depois substitua q = 2.",
+                  "explanation": "C'(q) = 2q + 4, logo C'(2) = 2(2) + 4 = 8. Isso significa que, em q = 2, o custo está aumentando à taxa de 8 unidades monetárias por unidade produzida."
+                },
+                {
+                  "id": "m1_l1_q5",
+                  "type": "multiple_choice",
+                  "latex": "$$\\text{A taxa de variação MÉDIA entre q=2 e q=5 foi 11. A taxa INSTANTÂNEA em q=2 é 8.}$$\\text{O que isso significa?}",
+                  "options": [
+                    "A taxa está desacelerando",
+                    "A taxa está acelerando",
+                    "São a mesma coisa",
+                    "Não tem relação"
+                  ],
+                  "answer": "A taxa está acelerando",
+                  "hint": "Compare: a média no intervalo [2,5] é 11, mas em q=2 a instantânea é apenas 8.",
+                  "explanation": "Em q=2, a taxa instantânea é 8. Mas a média até q=5 é 11, indicando que a taxa cresce ao longo do intervalo. Isso ocorre porque C(q) é quadrática (convexa)."
+                },
+                {
+                  "id": "m1_l1_q6",
+                  "type": "fill_gap",
+                  "text": "O Custo Marginal mede quanto custa produzir a {{gap}} unidade.",
+                  "answer": "próxima",
+                  "hint": "Marginal olha para frente ou para trás?",
+                  "explanation": "Marginal sempre se refere à próxima unidade (+1). É a variação instantânea ao aumentar q."
+                },
+                {
+                  "id": "m1_l1_q7",
+                  "type": "numeric",
+                  "latex": "$$\\text{Se RMg} = 10 \\text{ e CMg} = 8, \\text{ qual é o Lucro Marginal?}$$",
+                  "answer": "2",
+                  "hint": "Lucro Marginal = Receita Marginal - Custo Marginal.",
+                  "explanation": "LMg = RMg - CMg = 10 - 8 = 2. Como é positivo, vale a pena produzir essa unidade adicional."
                 }
               ]
             },
