@@ -88,12 +88,12 @@ export const lessonsData: GameData = {
                   "type": "multiple_choice",
                   "latex": "$$\\text{Se C(q) = q^2 + 4q + 100, qual é C'(q)?}$$",
                   "options": [
-                    "2q + 4",
-                    "q + 4",
-                    "2q",
-                    "q^2 + 4"
+                    "$2q + 4$",
+                    "$q + 4$",
+                    "$2q$",
+                    "$q^2 + 4$"
                   ],
-                  "answer": "2q + 4",
+                  "answer": "$2q + 4$",
                   "hint": "Use a definição do limite ou as regras de derivação que apareceram nos cards.",
                   "explanation": "Pela definição do limite (vista no card formal), obtemos C'(q) = 2q + 4. Cada termo foi derivado: d/dq(q²) = 2q, d/dq(4q) = 4, d/dq(100) = 0."
                 },
@@ -211,12 +211,12 @@ export const lessonsData: GameData = {
                   "type": "multiple_choice",
                   "latex": "$$\\text{Qual é a derivada de } g(x) = x^5?$$",
                   "options": [
-                    "5x^4",
-                    "x^4",
-                    "5x^5",
-                    "4x^5"
+                    "$5x^4$",
+                    "$x^4$",
+                    "$5x^5$",
+                    "$4x^5$"
                   ],
-                  "answer": "5x^4",
+                  "answer": "$5x^4$",
                   "hint": "Aplique a regra da potência: o expoente cai para frente.",
                   "explanation": "g'(x) = 5·x^(5-1) = 5x⁴. O 5 tomba e o expoente vira 4."
                 },

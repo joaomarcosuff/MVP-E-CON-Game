@@ -1,0 +1,45 @@
+
+import { Question } from '../../../../types';
+
+export const L2_QUESTIONS: Question[] = [
+  { id: "m1_l2_q1", type: "multiple_choice", prompt: "Qual a derivada de x²?", options: ["2x", "x", "2", "x²"], answer: "2x" },
+  { id: "m1_l2_q2", type: "numeric", prompt: "Se f(x) = x³, quanto vale f'(2)?", answer: "12", explanation: "f'(x) = 3x². Substituindo: 3 * (2^2) = 12." },
+  { id: "m1_l2_q3", type: "fill_gap", text: "Para derivar x^n, você tomba o n e subtrai {{gap}} do expoente.", answer: "um", explanation: "O novo expoente é sempre n - 1." },
+  { id: "m1_l2_q4", type: "numeric", prompt: "Derivada de x⁴ em x=1?", answer: "4" },
+  { id: "m1_l2_q5", type: "multiple_choice", prompt: "Qual a derivada de x?", options: ["1", "x", "0", "x²"], answer: "1" },
+  { id: "m1_l2_q6", type: "numeric", prompt: "Calcule f'(1) para 10x⁵?", answer: "50" },
+  { id: "m1_l2_q7", type: "multiple_choice", prompt: "Qual o novo expoente de x⁷ após derivar?", options: ["6", "7", "8", "5"], answer: "6" },
+  { id: "m1_l2_q8", type: "numeric", prompt: "Derivada de x² em x=5?", answer: "10" },
+  { id: "m1_l2_q9", type: "fill_gap", text: "Se y = x³, a inclinação da reta tangente em x=0 é {{gap}}.", answer: "zero" },
+  { id: "m1_l2_q10", type: "multiple_choice", prompt: "A regra da potência funciona para expoentes negativos (ex: x⁻²)?", options: ["Sim", "Não"], answer: "Sim" },
+  { id: "m1_l2_q11", type: "multiple_choice", prompt: "Qual a derivada de $f(x) = 8x^3$?", options: ["$24x^2$", "$24x$", "$8x^2$"], answer: "$24x^2$" },
+  { id: "m1_l2_q12", type: "numeric", prompt: "Se $f(x) = 2x^4 + 5x$, qual o valor de $f'(1)$?", answer: "13" },
+  { id: "m1_l2_q13", type: "numeric", prompt: "Receita $R(q) = 100q - 2q^2$. Qual a Receita Marginal em $q=10$?", answer: "60" },
+  { id: "m1_l2_q14", type: "multiple_choice", prompt: "Derivada de $0.5x^2 + x$?", options: ["$x + 1$", "$2x + 1$"], answer: "$x + 1$" },
+  { id: "m1_l2_q15", type: "numeric", prompt: "f(x) = 10x - x^2. Onde f'=0?", answer: "5" },
+  { id: "m1_l2_q16", type: "multiple_choice", prompt: "Derivada de 1/x (ou x⁻¹)?", options: ["$-1/x^2$", "$1/x^2$", "$\ln(x)$"], answer: "$-1/x^2$" },
+  { id: "m1_l2_q17", type: "numeric", prompt: "f(x) = 3x^2 + 4x. f'(2)?", answer: "16" },
+  { id: "m1_l2_q18", type: "numeric", prompt: "Custo $C(q) = 0.5q^2 + 2q$. CMg em q=20?", answer: "22" },
+  { id: "m1_l2_q19", type: "numeric", prompt: "f(x) = x^5 + x^4. f'(1)?", answer: "9" },
+  { id: "m1_l2_q20", type: "multiple_choice", prompt: "A constante multiplicando a função se mantém?", options: ["Sim", "Não"], answer: "Sim" },
+  { id: "m1_l2_q21", type: "numeric", prompt: "Dada $f(x) = x^{0.5}$, qual o valor de $f'(4)$?", answer: "0.25" },
+  { id: "m1_l2_q22", type: "multiple_choice", prompt: "Qual a derivada de $1/x^2$?", options: ["$-2x^{-3}$", "$-1/x$", "$2x$"], answer: "$-2x^{-3}$" },
+  { id: "m1_l2_q23", type: "numeric", prompt: "Produção $Q(L) = 100L^{0.5}$. PMg em L=25?", answer: "10" },
+  { id: "m1_l2_q24", type: "numeric", prompt: "Custo $C(q) = q^3 - 6q^2 + 15q$. CMg em q=2?", answer: "3" },
+  { id: "m1_l2_q25", type: "multiple_choice", prompt: "Derivada de $\sqrt{x} + x^2$?", options: ["$0.5x^{-0.5} + 2x$", "$x^{0.5} + 2x$"], answer: "$0.5x^{-0.5} + 2x$" },
+  { id: "m1_l2_q26", type: "numeric", prompt: "Inclinação de f(x)=2/x em x=2?", answer: "-0.5" },
+  { id: "m1_l2_q27", type: "fill_gap", text: "Rendimentos {{gap}} ocorrem se o expoente da produção for menor que 1.", answer: "decrescentes" },
+  { id: "m1_l2_q28", type: "numeric", prompt: "Lucro $L(q) = -q^3 + 3q^2 + 24q$. Em qual q o lucro marginal é zero?", answer: "4" },
+  { id: "m1_l2_q29", type: "multiple_choice", prompt: "Derivada de $x^{4/3}$?", options: ["$(4/3)x^{1/3}$", "$x^{1/3}$", "$3x^4$"], answer: "$(4/3)x^{1/3}$" },
+  { id: "m1_l2_q30", type: "numeric", prompt: "f(x) = (x² + x)/x. Qual o valor de f'(100)?", answer: "1" },
+  {
+    id: "m1_l2_q31",
+    type: "graph_point",
+    prompt: "Para a função $f(x) = x^2$ ao lado, identifique o ponto onde a INCLINAÇÃO (Derivada) é POSITIVA.",
+    instruction: "Toque em qualquer ponto no lado direito da parábola.",
+    svgPath: "M 50 50 Q 150 250 250 50",
+    target: { x: 200, y: 150, tolerance: 70 },
+    answer: "correct",
+    explanation: "Em $f(x)=x^2$, a derivada é $2x$. Para $x > 0$, a derivada é positiva, indicando que a função está crescendo (o gráfico 'sobe')."
+  }
+];

@@ -1,0 +1,45 @@
+
+import { Question } from '../../../../types';
+
+export const L1_QUESTIONS: Question[] = [
+  { id: "m1_l1_q1", type: "fill_gap", text: "O lucro é maximizado quando a Receita Marginal é {{gap}} ao Custo Marginal.", answer: "igual" },
+  { id: "m1_l1_q2", type: "multiple_choice", prompt: "O radar de velocidade mede qual tipo de taxa?", options: ["Média", "Marginal/Instantânea"], answer: "Marginal/Instantânea" },
+  { id: "m1_l1_q3", type: "multiple_choice", prompt: "A inclinação da reta tangente em um ponto da curva é a:", options: ["Derivada", "Média aritmética"], answer: "Derivada" },
+  { id: "m1_l1_q4", type: "fill_gap", text: "A derivada mede a taxa de variação {{gap}} de uma função.", answer: "instantânea" },
+  { id: "m1_l1_q5", type: "multiple_choice", prompt: "Se você viajou 100km in 2h, sua velocidade de 50km/h é:", options: ["Média", "Marginal"], answer: "Média" },
+  { id: "m1_l1_q6", type: "fill_gap", text: "Na economia, 'marginal' geralmente significa o efeito de {{gap}} uma unidade.", answer: "adicionar" },
+  { id: "m1_l1_q7", type: "multiple_choice", prompt: "Para calcular a derivada, fazemos a distância entre dois pontos (h) tender a:", options: ["Infinito", "Zero", "Um"], answer: "Zero" },
+  { id: "m1_l1_q8", type: "numeric", prompt: "Se o custo total não muda ao produzir mais (C=100), qual o CMg?", answer: "0" },
+  { id: "m1_l1_q9", type: "multiple_choice", prompt: "Se RMg > CMg, a empresa deve:", options: ["Aumentar produção", "Diminuir produção"], answer: "Aumentar produção" },
+  { id: "m1_l1_q10", type: "fill_gap", text: "A reta que corta a curva em dois pontos é a {{gap}}.", answer: "secante" },
+  { id: "m1_l1_q11", type: "numeric", prompt: "Qual a derivada da função f(x) = 10x?", answer: "10" },
+  { id: "m1_l1_q12", type: "multiple_choice", prompt: "Qual o valor da derivada de uma constante (ex: f(x) = 500)?", options: ["0", "500", "1"], answer: "0" },
+  { id: "m1_l1_q13", type: "numeric", prompt: "Se C(q) = 5q + 20, quanto custa a 100ª unidade?", answer: "5" },
+  { id: "m1_l1_q14", type: "multiple_choice", prompt: "Se a inclinação da reta tangente é negativa, a função está:", options: ["Crescendo", "Decrescendo", "Parada"], answer: "Decrescendo" },
+  { id: "m1_l1_q15", type: "numeric", prompt: "Dada f(x) = 2x + 1. Qual f'(5)?", answer: "2" },
+  { id: "m1_l1_q16", type: "fill_gap", text: "O limite da razão incremental é a definição formal de {{gap}}.", answer: "derivada" },
+  { id: "m1_l1_q17", type: "numeric", prompt: "Se a Receita é R(q) = 15q, qual a Receita Marginal?", answer: "15" },
+  { id: "m1_l1_q18", type: "multiple_choice", prompt: "A derivada de uma linha reta é:", options: ["Sempre constante", "Sempre zero", "Variável"], answer: "Sempre constante" },
+  { id: "m1_l1_q19", type: "numeric", prompt: "Se o Lucro é L(q) = 8q - 50. Qual o Lucro Marginal?", answer: "8" },
+  { id: "m1_l1_q20", type: "fill_gap", text: "No ponto onde a derivada é zero, a reta tangente é {{gap}}.", answer: "horizontal" },
+  { id: "m1_l1_q21", type: "numeric", prompt: "RMg = 20 e CMg = 12. Qual o lucro adicional da próxima unidade?", answer: "8" },
+  { id: "m1_l1_q22", type: "multiple_choice", prompt: "Se RMg = 15 e CMg = 18, a última unidade gerou:", options: ["Lucro extra", "Prejuízo extra"], answer: "Prejuízo extra" },
+  { id: "m1_l1_q23", type: "numeric", prompt: "Se o Lucro Total é L(q) = 100, qual o Lucro Marginal?", answer: "0" },
+  { id: "m1_l1_q24", type: "multiple_choice", prompt: "A 'CPO' (Condição de Primeira Ordem) para máximo exige derivada igual a:", options: ["Zero", "Um", "Infinito"], answer: "Zero" },
+  { id: "m1_l1_q25", type: "numeric", prompt: "C(q) = 10q. Qual o Custo Médio (C/q)?", answer: "10" },
+  { id: "m1_l1_q26", type: "numeric", prompt: "No caso anterior (C=10q), CMg e Custo Médio são iguais?", options: ["Sim", "Não"], answer: "Sim" },
+  { id: "m1_l1_q27", type: "fill_gap", text: "Se a função de Custo é C(q) = a + bq, 'a' é o custo {{gap}}.", answer: "fixo" },
+  { id: "m1_l1_q28", type: "numeric", prompt: "Dada f(x) = 0.5x. Qual f'(10)?", answer: "0.5" },
+  { id: "m1_l1_q29", type: "multiple_choice", prompt: "O conceito de 'Utilidade Marginal' refere-se ao prazer de consumir:", options: ["A próxima unidade", "Todas as unidades", "A primeira unidade"], answer: "A próxima unidade" },
+  { id: "m1_l1_q30", type: "numeric", prompt: "Se o CMg é constante e igual a 7, quanto custa produzir a unidade 1 milhão?", answer: "7" },
+  { 
+    id: "m1_l1_q31", 
+    type: "graph_point", 
+    prompt: "No gráfico de produção abaixo, identifique o ponto de MÁXIMO (onde a DERIVADA é nula).", 
+    instruction: "Toque no topo da montanha.",
+    svgPath: "M 20 250 Q 150 50 280 250", 
+    target: { x: 150, y: 50, tolerance: 35 }, 
+    answer: "correct",
+    explanation: "No ponto mais alto de uma função diferenciável, a reta tangente é perfeitamente horizontal, o que significa que sua inclinação (derivada) é zero."
+  }
+];
